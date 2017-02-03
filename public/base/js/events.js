@@ -9,20 +9,18 @@
 //     events.on("event.Namespace", function () { do_stuff(); });
 // });
 
-define(['jquery', 'base/js/namespace'], function($, Jupyter) {
+define(['base/js/namespace', 'jquery'], function(IPython, $) {
     "use strict";
+
+    var Events = function () {};
     
-    // Events singleton
-    if (!window._Events) {
-        window._Events = function () {};
-        window._events = new window._Events();
-    }
+    var events = new Events();
     
     // Backwards compatability.
-    Jupyter.Events = window._Events;
-    Jupyter.events = window._events;
+    IPython.Events = Events;
+    IPython.events = events;
     
-    var events = $([window._events]);
+    var events = $([events]);
 
     // catch and log errors in triggered events
     events._original_trigger = events.trigger;

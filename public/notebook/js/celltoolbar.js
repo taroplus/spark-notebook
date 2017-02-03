@@ -2,10 +2,10 @@
 // Distributed under the terms of the Modified BSD License.
 
 define([
-    'jquery',
     'base/js/namespace',
+    'jquery',
     'base/js/events'
-], function($, IPython, events) {
+], function(IPython, $, events) {
     "use strict";
 
     var CellToolbar = function (options) {

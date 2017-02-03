@@ -2,8 +2,9 @@
 // Distributed under the terms of the Modified BSD License.
 
 define([
+    'jquery',
     'notebook/js/celltoolbar',
-], function(celltoolbar) {
+], function($, celltoolbar) {
     "use strict";
 
 
@@ -39,6 +40,7 @@ define([
         slideshow_preset.push('slideshow.select');
 
         CellToolbar.register_preset('Slideshow',slideshow_preset, notebook);
+        console.log('Slideshow extension for metadata editing loaded.');
     };
     return {'register': register};
 });

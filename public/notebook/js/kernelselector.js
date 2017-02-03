@@ -5,8 +5,9 @@ define([
     'jquery',
     'base/js/namespace',
     'base/js/dialog',
-    'base/js/utils'
-], function($, IPython, dialog, utils) {
+    'base/js/utils',
+    'require',
+], function($, IPython, dialog, utils, require) {
     "use strict";
     
     var KernelSelector = function(selector, notebook) {
@@ -132,7 +133,6 @@ define([
         $("#kernel_indicator").find('.kernel_indicator_name').text(ks.spec.display_name);
         if (ks.resources['logo-64x64']) {
             logo_img.attr("src", ks.resources['logo-64x64']);
-            logo_img.attr("title", ks.spec.display_name);
             logo_img.show();
         } else {
             logo_img.hide();
@@ -155,8 +155,8 @@ define([
             //
             // > Uncaught (in promise) TypeError: require is not a function
             // 
-            console.info('Dynamically requiring kernel.js, `requirejs` is ', requirejs);
-            requirejs([ks.resources['kernel.js']],
+            console.info('Dynamically requiring kernel.js, `require` is ', require);
+            require([ks.resources['kernel.js']],
                 function (kernel_mod) {
                     if (kernel_mod && kernel_mod.onload) {
                         kernel_mod.onload();
@@ -276,13 +276,13 @@ define([
             title : 'Kernel not found',
             body : body,
             buttons : {
-                'Continue Without Kernel' : {
+                'Continue without kernel' : {
                     class : 'btn-danger',
                     click : function () {
                         that.events.trigger('no_kernel.Kernel');
                     }
                 },
-                'Set Kernel' : {
+                OK : {
                     class : 'btn-primary',
                     click : function () {
                         that.set_kernel(select.val());

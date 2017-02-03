@@ -5,8 +5,7 @@ define([
     'jquery',
     'base/js/utils',
     'base/js/dialog',
-    'underscore'
-], function($, utils, dialog, _) {
+], function($, utils, dialog) {
     "use strict";
     var platform = utils.platform;
 
@@ -154,22 +153,13 @@ define([
         return hum;
     }
 
-    function _humanize_sequence(sequence){
-        var joinchar = ',';
-        var hum = _.map(sequence.replace(/meta/g, 'cmd').split(','), _humanize_shortcut).join(joinchar);
-        return hum;
-    }
-
-    function _humanize_shortcut(shortcut){
+    function humanize_shortcut(shortcut){
         var joinchar = '-';
         if (platform === 'MacOS'){
             joinchar = '';
         }
-        return _.map(shortcut.split('-'), humanize_key ).join(joinchar);
-    }
-
-    function humanize_shortcut(shortcut){
-        return '<kbd>'+_humanize_shortcut(shortcut)+'</kbd>';
+        var sh = _.map(shortcut.split('-'), humanize_key ).join(joinchar);
+        return '<kbd>'+sh+'</kbd>';
     }
     
 
@@ -188,6 +178,10 @@ define([
             $(this.shortcut_dialog).modal("toggle");
             return;
         }
+        var command_shortcuts = this.keyboard_manager.command_shortcuts.help();
+        var edit_shortcuts = this.keyboard_manager.edit_shortcuts.help();
+        var help, shortcut;
+        var i, half, n;
         var element = $('<div/>');
 
         // The documentation
@@ -195,7 +189,7 @@ define([
         doc.append(
             'The Jupyter Notebook has two different keyboard input modes. <b>Edit mode</b> '+
             'allows you to type code/text into a cell and is indicated by a green cell '+
-            'border. <b>Command mode</b> binds the keyboard to notebook level commands '+
+            'border. <b>Command mode</b> binds the keyboard to notebook level actions '+
             'and is indicated by a grey cell border with a blue left margin.'
         );
         element.append(doc);
@@ -257,29 +251,14 @@ define([
 
 
     QuickHelp.prototype.build_command_help = function () {
-        var that = this;
         var command_shortcuts = this.keyboard_manager.command_shortcuts.help();
-        var div = build_div('<h4>Command Mode (press <kbd>Esc</kbd> to enable)</h4>', command_shortcuts);
-        var edit_button = $('<button/>')
-            .text("Edit Shortcuts")
-            .addClass('btn btn-xs btn-default pull-right')
-            .attr('href', '#')
-            .attr('title', 'edit command-mode keyboard shortcuts')
-            .click(function () {
-                // close this dialog
-                $(that.shortcut_dialog).modal("toggle");
-                // and open the next one
-                that.keyboard_manager.actions.call(
-                    'jupyter-notebook:edit-command-mode-keyboard-shortcuts');
-            });
-        div.find('h4').append(edit_button);
-        return div;
+        return build_div('<h4>Command Mode (press <kbd>Esc</kbd> to enable)</h4>', command_shortcuts);
     };
 
     
     QuickHelp.prototype.build_edit_help = function (cm_shortcuts) {
         var edit_shortcuts = this.keyboard_manager.edit_shortcuts.help();
-        edit_shortcuts = $.merge($.merge([], cm_shortcuts), edit_shortcuts);
+        edit_shortcuts = jQuery.merge(jQuery.merge([], cm_shortcuts), edit_shortcuts);
         return build_div('<h4>Edit Mode (press <kbd>Enter</kbd> to enable)</h4>', edit_shortcuts);
     };
 
@@ -322,7 +301,6 @@ define([
 
     return {'QuickHelp': QuickHelp,
       humanize_shortcut: humanize_shortcut,
-      humanize_sequence: humanize_sequence,
-      _humanize_sequence: _humanize_sequence,
+      humanize_sequence: humanize_sequence
   };
 });

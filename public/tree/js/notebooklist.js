@@ -2,16 +2,15 @@
 // Distributed under the terms of the Modified BSD License.
 
 define([
-    'jquery',
     'base/js/namespace',
+    'jquery',
     'base/js/utils',
     'base/js/dialog',
     'base/js/events',
     'base/js/keyboard',
-    'moment'
-], function($, IPython, utils, dialog, events, keyboard, moment) {
+], function(IPython, $, utils, dialog, events, keyboard) {
     "use strict";
-
+    
     var NotebookList = function (selector, options) {
         /**
          * Constructor
@@ -43,21 +42,11 @@ define([
         this.notebook_path = options.notebook_path || utils.get_body_data("notebookPath");
         this.contents = options.contents;
         if (this.session_list && this.session_list.events) {
-            this.session_list.events.on('sessions_loaded.Dashboard',
+            this.session_list.events.on('sessions_loaded.Dashboard', 
                 function(e, d) { that.sessions_loaded(d); });
         }
         this.selected = [];
-        // 0 => descending, 1 => ascending
-        this.sort_state = {
-            'last-modified': 0,
-            'sort-name': 0
-        };
         this._max_upload_size_mb = 25;
-        this.EDIT_MIMETYPES = [
-          'application/javascript',
-          'application/x-sh',
-          'application/vnd.groove-tool-template'
-        ];
     };
 
     NotebookList.prototype.style = function () {
@@ -72,8 +61,6 @@ define([
     NotebookList.prototype.bind_events = function () {
         var that = this;
         $('#refresh_' + this.element_name + '_list').click(function () {
-            $("#sort-name i").switchClass("fa-arrow-down", "fa-arrow-up");
-            $("#last-modified i").switchClass("fa-arrow-down", "fa-arrow-up");
             that.load_sessions();
         });
         this.element.bind('dragover', function () {
@@ -108,7 +95,7 @@ define([
                             OK: {'class': 'btn-primary'}
                         }
                     });
-                    console.warn('Error during New file creation', e);
+                    console.warn('Error durring New file creation', e);
                 });
                 that.load_sessions();
             });
@@ -128,19 +115,15 @@ define([
                             OK: {'class': 'btn-primary'}
                         }
                     });
-                    console.warn('Error during New directory creation', e);
+                    console.warn('Error durring New directory creation', e);
                 });
                 that.load_sessions();
             });
 
             // Bind events for action buttons.
             $('.rename-button').click($.proxy(this.rename_selected, this));
-            $('.move-button').click($.proxy(this.move_selected, this));
-            $('.download-button').click($.proxy(this.download_selected, this));
             $('.shutdown-button').click($.proxy(this.shutdown_selected, this));
             $('.duplicate-button').click($.proxy(this.duplicate_selected, this));
-            $('.view-button').click($.proxy(this.view_selected, this));
-            $('.edit-button').click($.proxy(this.edit_selected, this));
             $('.delete-button').click($.proxy(this.delete_selected, this));
 
             // Bind events for selection menu buttons.
@@ -165,66 +148,7 @@ define([
                     }
                 }
             });
-
-            $('.sort-action').click(function(e) {
-                var sort_on = e.target.id;
-
-                if (that.sort_state.sort_on == 0) {
-                    that.sort_list(sort_on, 1);
-                    $("#" + sort_on + " i").switchClass("fa-arrow-up", "fa-arrow-down");
-                    that.sort_state.sort_on = 1;
-                } else {
-                    that.sort_list(sort_on, 2);
-                    $("#" + sort_on + " i").switchClass("fa-arrow-down", "fa-arrow-up");
-                    that.sort_state.sort_on = 0;
-                }
-            });
         }
-    };
-
-    NotebookList.prototype.sort_list = function(id, order) {
-        var that = this;
-        if (id == 'last-modified') {
-            that.sort_datetime(order);
-        } else if (id == 'sort-name') {
-            that.sort_name(order);
-        } else {
-            console.log('id provided to sort_list function is invalid.');
-        }
-    };
-
-    NotebookList.prototype.sort_datetime = function(order) {
-        var datetime_sort_helper = function(parent, child, selector) {
-            var items = parent.children(child).sort(function(a, b) {
-                var first_date = $(selector, a).attr("title");
-                var second_date = $(selector, b).attr("title");
-                return utils.datetime_sort_helper(first_date, second_date, order);
-            });
-            parent.append(items);
-        };
-
-        datetime_sort_helper($('#notebook_list'), "div.list_item", 'span.item_modified');
-    };
-
-    NotebookList.prototype.sort_name = function(order) {
-        var name_sort_helper = function(parent, child, selector) {
-            var items = parent.children(child).sort(function(a, b) {
-                var first_name = $(selector, a).text();
-                var second_name = $(selector, b).text();
-                return (function(a, b, order) {
-                    if (a < b) {
-                        return (order == 1) ? -1 : 1;
-                    } else if (a == b) {
-                        return 0;
-                    } else {
-                        return (order == 1) ? 1 : -1;
-                    }
-                })(first_name, second_name, order);
-            });
-            parent.append(items);
-        };
-
-        name_sort_helper($('#notebook_list'), "div.list_item", 'span.item_name');
     };
 
     NotebookList.prototype.handleFilesUpload =  function(event, dropOrForm) {
@@ -285,7 +209,7 @@ define([
             reader.onerror = reader_onerror;
         }
         // Replace the file input form wth a clone of itself. This is required to
-        // reset the form. Otherwise, if you upload a file, delete it and try to
+        // reset the form. Otherwise, if you upload a file, delete it and try to 
         // upload it again, the changed event won't fire.
         var form = $('input.fileinput');
         form.replaceWith(form.clone(true));
@@ -303,7 +227,7 @@ define([
         if (remove_uploads) {
             this.element.children('.list_item').remove();
         } else {
-            this.element.children('.list_item:not(.new-file)').remove();
+            this.element.children('.list_item:not(.new-file)').remove();  
         }
     };
 
@@ -405,7 +329,7 @@ define([
                 }
             }
         });
-        this._selection_changed();
+        this._selection_changed();  
     };
 
 
@@ -445,12 +369,7 @@ define([
         $("<span/>")
             .addClass("item_name")
             .appendTo(link);
-
-        $("<span/>")
-            .addClass("item_modified")
-            .addClass("pull-right")
-            .appendTo(item);
-
+        
         if (selectable === false) {
             checkbox.css('visibility', 'hidden');
         } else if (selectable === true) {
@@ -473,7 +392,7 @@ define([
             .text('Running')
             .css('visibility', 'hidden')
             .appendTo(buttons);
-
+        
         if (index === -1) {
             this.element.append(row);
         } else {
@@ -560,23 +479,6 @@ define([
             $('.rename-button').css('display', 'none');
         }
 
-        // Move is visible if at least one item is selected, and none of them
-        // are a running notebook.
-        if (selected.length > 0 && !has_running_notebook) {
-            $('.move-button').css('display', 'inline-block');
-        } else {
-            $('.move-button').css('display', 'none');
-        }
-
-        // Download is only visible when one item is selected, and it is not a
-        // running notebook or a directory
-        // TODO(nhdaly): Add support for download multiple items at once.
-        if (selected.length === 1 && !has_running_notebook && !has_directory) {
-            $('.download-button').css('display', 'inline-block');
-        } else {
-            $('.download-button').css('display', 'none');
-        }
-
         // Shutdown is only visible when one or more notebooks running notebooks
         // are selected and no non-notebook items are selected.
         if (has_running_notebook && !(has_file || has_directory)) {
@@ -599,35 +501,19 @@ define([
             $('.delete-button').css('display', 'none');
         }
 
-        // View is visible when an item is renderable or downloadable
-        if (selected.length > 0 && !has_directory && selected.every(function(el) {
-            return el.path.match(/html?|json|jpe?g|png|gif|tiff?|svg|bmp|ico|pdf|doc|xls/);
-        })) {
-            $('.view-button').css('display', 'inline-block');
-        } else {
-            $('.view-button').css('display', 'none');
-        }
-
-        // Edit is visible when an item is editable
-        if (selected.length > 0 && !has_directory) {
-            $('.edit-button').css('display', 'inline-block');
-        } else {
-            $('.edit-button').css('display', 'none');
-        }
-
         // If all of the items are selected, show the selector as checked.  If
         // some of the items are selected, show it as checked.  Otherwise,
         // uncheck it.
         var total = 0;
         $('.list_item input[type=checkbox]').each(function(index, item) {
             var parent = $(item).parent().parent();
-            // If the item doesn't have an upload button and it's not the
+            // If the item doesn't have an upload button and it's not the 
             // breadcrumbs, it can be selected.  Breadcrumbs path == ''.
             if (parent.find('.upload_button').length === 0 && parent.data('path') !== '' && parent.data('path') !== utils.url_path_split(that.notebook_path)[0]) {
                 total++;
             }
         });
-
+        
         var select_all = $("#select-all");
         if (checked === 0) {
             select_all.prop('checked', false);
@@ -655,13 +541,11 @@ define([
 
     NotebookList.prototype.add_link = function (model, item) {
         var path = model.path,
-            name = model.name,
-            modified = model.last_modified;
+            name = model.name;
         var running = (model.type === 'notebook' && this.sessions[path] !== undefined);
 
         item.data('name', name);
         item.data('path', path);
-        item.data('modified', modified);
         item.data('type', model.type);
         item.find(".item_name").text(name);
         var icon = NotebookList.icons[model.type];
@@ -670,13 +554,13 @@ define([
         }
         var uri_prefix = NotebookList.uri_prefixes[model.type];
         if (model.type === 'file' &&
-            model.mimetype &&
-            model.mimetype.substr(0, 5) !== 'text/' &&
-            this.EDIT_MIMETYPES.indexOf(model.mimetype) < 0) {
+            model.mimetype && model.mimetype.substr(0,5) !== 'text/'
+            && !model.mimetype.endsWith('javascript')
+        ) {
             // send text/unidentified files to editor, others go to raw viewer
             uri_prefix = 'files';
         }
-
+        
         item.find(".item_icon").addClass(icon).addClass('icon-fixed-width');
         var link = item.find("a.item_link")
             .attr('href',
@@ -694,10 +578,6 @@ define([
         if (model.type !== "directory") {
             link.attr('target',IPython._target);
         }
-
-        // Add in the date that the file was last modified
-        item.find(".item_modified").text(utils.format_datetime(modified));
-        item.find(".item_modified").attr("title", moment(modified).format("YYYY-MM-DD HH:mm"));
     };
 
 
@@ -730,8 +610,6 @@ define([
                 that.shutdown_notebook(item.path);
             }
         });
-        // Deselect items after successful shutdown.
-        that.select('select-none');
     };
 
     NotebookList.prototype.shutdown_notebook = function(path) {
@@ -778,17 +656,13 @@ define([
         var d = dialog.modal({
             title : "Rename "+ item_type,
             body : dialog_body,
-            default_button: "Cancel",
             buttons : {
-                Cancel: {},
-                Rename : {
+                OK : {
                     class: "btn-primary",
                     click: function() {
                         that.contents.rename(item_path, utils.url_path_join(that.notebook_path, input.val())).then(function() {
                             that.load_list();
-                            // Deselect items after successful rename.
-                            that.select('select-none');
-                        }).catch(function(e) {
+                        }).catch(function(e) { 
                             dialog.modal({
                                 title: "Rename Failed",
                                 body: $('<div/>')
@@ -800,10 +674,11 @@ define([
                                     OK: {'class': 'btn-primary'}
                                 }
                             });
-                            console.warn('Error during renaming :', e);
+                            console.warn('Error durring renaming :', e);
                         });
                     }
-                }
+                },
+                Cancel : {}
             },
             open : function () {
                 // Upon ENTER, click the OK button.
@@ -814,7 +689,6 @@ define([
                     }
                 });
                 input.focus();
-                // Highlight the filename (up to the filetype suffix) in the input field.
                 if (input.val().indexOf(".") > 0) {
                     input[0].setSelectionRange(0,input.val().indexOf("."));
                 } else {
@@ -824,117 +698,30 @@ define([
         });
     };
 
-    NotebookList.prototype.move_selected = function() {
-        var that = this;
-        var selected = that.selected.slice(); // Don't let that.selected change out from under us
-        var num_items = selected.length;
-
-        // Can move one or more selected items.
-        if (!(num_items >= 1)) {
-            return;
-        }
-
-        // Open a dialog to enter the new path, with current path as default.
-        var input = $('<input/>').attr('type','text').attr('size','25').addClass('form-control')
-            .val(utils.url_path_join('/', that.notebook_path));
-        var dialog_body = $('<div/>').append(
-            $("<p/>").addClass("rename-message")
-                .text('Enter new destination directory path for '+ num_items + ' items:')
-        ).append(
-            $("<br/>")
-        ).append(input);
-        var d = dialog.modal({
-            title : "Move "+ num_items + " Items",
-            body : dialog_body,
-            default_button: "Cancel",
-            buttons : {
-                Cancel : {},
-                Move : {
-                    class: "btn-primary",
-                    click: function() {
-                        // Move all the items.
-                        selected.forEach(function(item) {
-                            var item_path = item.path;
-                            var item_name = item.name;
-                            // Construct the new path using the user input and the item's name.
-                            var new_path = utils.url_path_join(input.val(), item_name);
-                            that.contents.rename(item_path, new_path).then(function() {
-                                // After each move finishes, reload the list.
-                                that.load_list();
-                            }).catch(function(e) {
-                                // If any of the moves fails, show this dialog for that move.
-                                dialog.modal({
-                                    title: "Move Failed",
-                                    body: $('<div/>')
-                                        .text("An error occurred while moving \"" + item_name + "\" from \"" + item_path + "\" to \"" + new_path + "\".")
-                                        .append($('<div/>')
-                                            .addClass('alert alert-danger')
-                                            .text(e.message || e)),
-                                    buttons: {
-                                        OK: {'class': 'btn-primary'}
-                                    }
-                                });
-                                console.warn('Error during moving :', e);
-                            });
-                        });  // End of forEach.
-                    }
-                }
-            },
-            // TODO: Consider adding fancier UI per Issue #941.
-            open : function () {
-                // Upon ENTER, click the OK button.
-                input.keydown(function (event) {
-                    if (event.which === keyboard.keycodes.enter) {
-                        d.find('.btn-primary').first().click();
-                        return false;
-                    }
-                });
-                // Put the cursor at the end of the input.
-                input.focus();
-            }
-        });
-    };
-
-    NotebookList.prototype.download_selected = function() {
-        var that = this;
-
-        // TODO(nhdaly): Support download multiple items at once.
-        if (that.selected.length !== 1){
-            return;
-        }
-
-        var item_path = that.selected[0].path;
-
-        window.open(utils.url_path_join(that.base_url, 'files', utils.encode_uri_components(item_path)) + '?download=1', IPython._target);
-    };
-
     NotebookList.prototype.delete_selected = function() {
         var message;
-        var selected = this.selected.slice(); // Don't let that.selected change out from under us
-        if (selected.length === 1) {
-            message = 'Are you sure you want to permanently delete: ' + selected[0].name + '?';
+        if (this.selected.length === 1) {
+            message = 'Are you sure you want to permanently delete: ' + this.selected[0].name + '?';
         } else {
-            message = 'Are you sure you want to permanently delete the ' + selected.length + ' files/folders selected?';
+            message = 'Are you sure you want to permanently delete the ' + this.selected.length + ' files/folders selected?';
         }
         var that = this;
         dialog.modal({
             title : "Delete",
             body : message,
-            default_button: "Cancel",
             buttons : {
-                Cancel: {},
                 Delete : {
                     class: "btn-danger",
                     click: function() {
-                        // Shutdown any/all selected notebooks before deleting
+                        // Shutdown any/all selected notebooks before deleting 
                         // the files.
                         that.shutdown_selected();
 
                         // Delete selected.
-                        selected.forEach(function(item) {
+                        that.selected.forEach(function(item) {
                             that.contents.delete(item.path).then(function() {
                                     that.notebook_deleted(item.path);
-                            }).catch(function(e) {
+                            }).catch(function(e) { 
                                 dialog.modal({
                                     title: "Delete Failed",
                                     body: $('<div/>')
@@ -946,59 +733,35 @@ define([
                                         OK: {'class': 'btn-primary'}
                                     }
                                 });
-                                console.warn('Error during content deletion:', e);
+                                console.warn('Error durring content deletion:', e);
                             });
                         });
                     }
-                }
+                },
+                Cancel : {}
             }
         });
     };
 
-    NotebookList.prototype.view_selected = function() {
-        var that = this;
-        that.selected.forEach(function(item) {
-            var item_path = utils.encode_uri_components(item.path);
-            // Handle HTML files differently
-            var item_type = item_path.endsWith('.html') ? 'view' : 'files';
-            window.open(utils.url_path_join(that.base_url, item_type, utils.encode_uri_components(item_path)), IPython._target);
-      	});
-    };
-
-    NotebookList.prototype.edit_selected = function() {
-        var that = this;
-        that.selected.forEach(function(item) {
-            var item_path = utils.encode_uri_components(item.path);
-            // Handle ipynb files differently
-            var item_type = item_path.endsWith('.ipynb') ? 'notebooks' : 'edit';
-            window.open(utils.url_path_join(that.base_url, item_type, utils.encode_uri_components(item_path)), IPython._target);
-      	});
-    };
-
     NotebookList.prototype.duplicate_selected = function() {
         var message;
-        var selected = this.selected.slice(); // Don't let that.selected change out from under us
-        if (selected.length === 1) {
-            message = 'Are you sure you want to duplicate: ' + selected[0].name + '?';
+        if (this.selected.length === 1) {
+            message = 'Are you sure you want to duplicate: ' + this.selected[0].name + '?';
         } else {
-            message = 'Are you sure you want to duplicate the ' + selected.length + ' files selected?';
+            message = 'Are you sure you want to duplicate the ' + this.selected.length + ' files selected?';
         }
         var that = this;
         dialog.modal({
             title : "Duplicate",
             body : message,
-            default_button: "Cancel",
             buttons : {
-                Cancel: {},
                 Duplicate : {
                     class: "btn-primary",
                     click: function() {
-                        selected.forEach(function(item) {
+                        that.selected.forEach(function(item) {
                             that.contents.copy(item.path, that.notebook_path).then(function () {
                                 that.load_list();
-                                // Deselect items after successful duplication.
-                                that.select('select-none');
-                            }).catch(function(e) {
+                            }).catch(function(e) { 
                                 dialog.modal({
                                     title: "Duplicate Failed",
                                     body: $('<div/>')
@@ -1010,11 +773,12 @@ define([
                                         OK: {'class': 'btn-primary'}
                                     }
                                 });
-                                console.warn('Error during content duplication', e);
+                                console.warn('Error durring content duplication', e);
                             });
                         });
                     }
-                }
+                },
+                Cancel : {}
             }
         });
     };
@@ -1084,7 +848,7 @@ define([
                                 }
                             }}
                         });
-                        console.warn('Error during notebook uploading', e);
+                        console.warn('Error durring notebook uploading', e);
                         return false;
                     }
                     content_type = 'application/json';
@@ -1101,26 +865,25 @@ define([
                     that.add_link(model, item);
                     that.session_list.load_sessions();
                 };
-
+                
                 var exists = false;
                 $.each(that.element.find('.list_item:not(.new-file)'), function(k,v){
                     if ($(v).data('name') === filename) { exists = true; return false; }
                 });
-
+                
                 if (exists) {
                     dialog.modal({
                         title : "Replace file",
                         body : 'There is already a file named ' + filename + ', do you want to replace it?',
-                        default_button: "Cancel",
                         buttons : {
-                            Cancel : {
-                                click: function() { item.remove(); }
-                            },
                             Overwrite : {
                                 class: "btn-danger",
                                 click: function () {
                                     that.contents.save(path, model).then(on_success);
                                 }
+                            },
+                            Cancel : {
+                                click: function() { item.remove(); }
                             }
                         }
                     });

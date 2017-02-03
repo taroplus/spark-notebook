@@ -72,9 +72,7 @@ define([
         var d = dialog.modal({
             title: "Rename File",
             body: dialog_body,
-            default_button: "Cancel",
             buttons : {
-                "Cancel": {},
                 "OK": {
                     class: "btn-primary",
                     click: function () {
@@ -91,8 +89,9 @@ define([
                         );
                         return false;
                     }
-                }
-            },
+                },
+                "Cancel": {}
+                },
             open : function () {
                 // Upon ENTER, click the OK button.
                 d.find('input[type="text"]').keydown(function (event) {

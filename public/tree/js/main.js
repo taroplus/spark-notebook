@@ -1,49 +1,34 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-// adapted from Mozilla Developer Network example at
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
-// shim `bind` for testing under casper.js
-var bind = function bind(obj) {
-  var slice = [].slice;
-  var args = slice.call(arguments, 1),
-    self = this,
-    nop = function() {
-    },
-    bound = function() {
-      return self.apply(this instanceof nop ? this : (obj || {}), args.concat(slice.call(arguments)));
-    };
-  nop.prototype = this.prototype || {}; // Firefox cries sometimes if prototype is undefined
-  bound.prototype = new nop();
-  return bound;
-};
-Function.prototype.bind = Function.prototype.bind || bind ;
-
-
 require([
     'jquery',
-    'contents',
     'base/js/namespace',
     'base/js/dialog',
     'base/js/events',
     'base/js/page',
     'base/js/utils',
     'services/config',
+    'contents',
     'tree/js/notebooklist',
     'tree/js/sessionlist',
     'tree/js/kernellist',
     'tree/js/terminallist',
     'tree/js/newnotebook',
     'auth/js/loginwidget',
+    // only loaded, not used:
+    'jquery-ui',
+    'bootstrap',
+    'custom',
 ], function(
     $,
-    contents_service,
     IPython,
     dialog,
     events,
     page,
     utils,
     config,
+    contents_service,
     notebooklist,
     sesssionlist,
     kernellist,
@@ -51,17 +36,18 @@ require([
     newnotebook,
     loginwidget){
     "use strict";
-    try{
-        requirejs(['custom/custom'], function() {});
-    } catch(err) {
-        console.log("Error loading custom.js from tree service. Continuing and logging");
-        console.warn(err);
+
+    IPython.NotebookList = notebooklist.NotebookList;
+
+    page = new page.Page();
+    
+    function isMirroringEnabled() {
+        return (new RegExp("^(ar|he)").test(navigator.language));
     }
-
-    console.log('Welcome to Project Jupyter! Explore the various tools available and their corresponding documentation. If you are interested in contributing to the platform, please visit the community resources section at http://jupyter.org/community.html.');
-
-
-    // Setup all of the config related things
+    
+    if (isMirroringEnabled()) {
+    	 $("body").attr("dir","rtl");
+    }
 
     var common_options = {
         base_url: utils.get_body_data("baseUrl"),
@@ -73,10 +59,6 @@ require([
     var common_config = new config.ConfigSection('common', common_options);
     common_config.load();
 
-    // Instantiate the main objects
-
-    page = new page.Page();
-
     var session_list = new sesssionlist.SesssionList($.extend({
         events: events},
         common_options));
@@ -84,7 +66,6 @@ require([
         base_url: common_options.base_url,
         common_config: common_config
     });
-    IPython.NotebookList = notebooklist.NotebookList;
     var notebook_list = new notebooklist.NotebookList('#notebook_list', $.extend({
         contents: contents,
         session_list:  session_list},
@@ -173,8 +154,6 @@ require([
     IPython.new_notebook_widget = new_buttons;
 
     events.trigger('app_initialized.DashboardApp');
-    
-    // Now actually load nbextensions
     utils.load_extensions_from_config(cfg);
     utils.load_extensions_from_config(common_config);
     

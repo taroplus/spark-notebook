@@ -4,9 +4,8 @@
 define(function(require){
     "use strict";
 
-    var $ = require('jquery');
-    require('typeahead');
     var QH = require("notebook/js/quickhelp");
+    var $ = require("jquery");
 
     /**
      * Humanize the action name to be consumed by user.
@@ -171,7 +170,7 @@ define(function(require){
           group: ["group", "{{group}} command group"],
           searchOnFocus: true,
           mustSelectItem: true,
-          template: '<i class="fa fa-icon {{icon}}"></i>{{display}}  <div title={{key}} class="pull-right {{mode_shortcut}}">{{shortcut}}</div>',
+          template: '<i class="fa fa-icon {{icon}}"></i>{{display}}  <div class="pull-right {{mode_shortcut}}">{{shortcut}}</div>',
           order: "asc",
           source: src,
           callback: {

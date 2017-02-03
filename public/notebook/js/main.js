@@ -1,30 +1,11 @@
 // Copyright (c) Jupyter Development Team.
 // Distributed under the terms of the Modified BSD License.
 
-// adapted from Mozilla Developer Network example at
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
-// shim `bind` for testing under casper.js
-var bind = function bind(obj) {
-  var slice = [].slice;
-  var args = slice.call(arguments, 1),
-    self = this,
-    nop = function() {
-    },
-    bound = function() {
-      return self.apply(this instanceof nop ? this : (obj || {}), args.concat(slice.call(arguments)));
-    };
-  nop.prototype = this.prototype || {}; // Firefox cries sometimes if prototype is undefined
-  bound.prototype = new nop();
-  return bound;
-};
-Function.prototype.bind = Function.prototype.bind || bind ;
-
-
 require([
-    'jquery',
-    'contents',
     'base/js/namespace',
+    'jquery',
     'notebook/js/notebook',
+    'contents',
     'services/config',
     'base/js/utils',
     'base/js/page',
@@ -41,49 +22,37 @@ require([
     'notebook/js/kernelselector',
     'codemirror/lib/codemirror',
     'notebook/js/about',
+    'typeahead',
     'notebook/js/searchandreplace',
-    'notebook/js/clipboard'
+    'custom',
 ], function(
+    IPython, 
     $,
-    contents_service,
-    IPython,
-    notebook,
+    notebook, 
+    contents,
     configmod,
-    utils,
-    page,
+    utils, 
+    page, 
     events,
-    loginwidget,
-    maintoolbar,
-    pager,
-    quickhelp,
-    menubar,
-    notificationarea,
+    loginwidget, 
+    maintoolbar, 
+    pager, 
+    quickhelp, 
+    menubar, 
+    notificationarea, 
     savewidget,
     actions,
     keyboardmanager,
     kernelselector,
     CodeMirror,
     about,
-    searchandreplace,
-    clipboard
+    typeahead,
+    searchandreplace
     ) {
     "use strict";
 
-    // Pull typeahead from the global jquery object
-    var typeahead = $.typeahead;
-    
-    try{
-        requirejs(['custom/custom'], function() {});
-    } catch(err) {
-        console.log("Error processing custom.js. Logging and continuing");
-        console.warn(err);
-    }
-
     // compat with old IPython, remove for IPython > 3.0
     window.CodeMirror = CodeMirror;
-
-    // Setup all of the config related things
-    
 
     var common_options = {
         ws_url : utils.get_body_data("wsUrl"),
@@ -96,24 +65,19 @@ require([
     config_section.load();
     var common_config = new configmod.ConfigSection('common', common_options);
     common_config.load();
-
-    // Instantiate the main objects
-    
     var page = new page.Page();
     var pager = new pager.Pager('div#pager', {
         events: events});
     var acts = new actions.init();
     var keyboard_manager = new keyboardmanager.KeyboardManager({
-        pager: pager,
-        events: events,
-        actions: acts, 
-        config: config_section,
-    });
+        pager: pager, 
+        events: events, 
+        actions: acts });
     var save_widget = new savewidget.SaveWidget('span#save_widget', {
-        events: events,
+        events: events, 
         keyboard_manager: keyboard_manager});
     acts.extend_env({save_widget:save_widget});
-    var contents = new contents_service.Contents({
+    var contents = new contents.Contents({
           base_url: common_options.base_url,
           common_config: common_config
         });
@@ -126,28 +90,27 @@ require([
         common_options));
     var login_widget = new loginwidget.LoginWidget('span#login_widget', common_options);
     var toolbar = new maintoolbar.MainToolBar('#maintoolbar-container', {
-        notebook: notebook,
-        events: events,
-        actions: acts});
+        notebook: notebook, 
+        events: events, 
+        actions: acts}); 
     var quick_help = new quickhelp.QuickHelp({
-        keyboard_manager: keyboard_manager,
+        keyboard_manager: keyboard_manager, 
         events: events,
         notebook: notebook});
     keyboard_manager.set_notebook(notebook);
     keyboard_manager.set_quickhelp(quick_help);
     var menubar = new menubar.MenuBar('#menubar', $.extend({
-        notebook: notebook,
+        notebook: notebook, 
         contents: contents,
-        events: events,
-        save_widget: save_widget,
+        events: events, 
+        save_widget: save_widget, 
         quick_help: quick_help,
-        actions: acts,
-        config: config_section},
+        actions: acts}, 
         common_options));
     var notification_area = new notificationarea.NotebookNotificationArea(
         '#notification_area', {
-        events: events,
-        save_widget: save_widget,
+        events: events, 
+        save_widget: save_widget, 
         notebook: notebook,
         keyboard_manager: keyboard_manager});
     notification_area.init_notification_widgets();
@@ -176,7 +139,7 @@ require([
         }
         notebook.set_autosave_interval(notebook.minimum_autosave_interval);
     });
-
+    
     IPython.page = page;
     IPython.notebook = notebook;
     IPython.contents = contents;
@@ -197,7 +160,7 @@ require([
     }
 
     Object.defineProperty( IPython, 'actions', {
-      get: function() {
+      get: function() { 
           console.warn('accessing "actions" on the global IPython/Jupyter is not recommended. Pass it to your objects contructors at creation time');
           return acts;
       },
@@ -205,9 +168,7 @@ require([
       configurable: false
     });
 
-    clipboard.setup_clipboard_events();
-    
-    // Now actually load nbextensionsload_extensions_from_config
+    // Now actually load nbextensions from config
     Promise.all([
         utils.load_extensions_from_config(config_section),
         utils.load_extensions_from_config(common_config),

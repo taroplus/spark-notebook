@@ -8,6 +8,7 @@ define([
     'base/js/dialog',
     'codemirror/lib/codemirror',
     'codemirror/mode/meta',
+    'bootstrap',
 ], function($, IPython, utils, dialog, CodeMirror) {
     "use strict";
     

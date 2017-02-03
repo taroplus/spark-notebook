@@ -63,32 +63,6 @@ define(function(require){
      *
      **/
     var _actions = {
-        'toggle-rtl-layout': {
-            help: 'Open a dialog to edit the command mode keyboard shortcuts',
-            handler: function () {
-              (document.body.getAttribute('dir')=='rtl') ? document.body.setAttribute('dir','ltr') : document.body.setAttribute('dir','rtl');
-            }
-        },
-        'edit-command-mode-keyboard-shortcuts': {
-            help: 'Open a dialog to edit the command mode keyboard shortcuts',
-            handler: function (env) {
-                env.notebook.show_shortcuts_editor();
-            }
-        },
-        'shutdown-kernel': {
-            help: 'Shutdown the kernel (no confirmation dialog)',
-            handler: function (env) {
-                env.notebook.shutdown_kernel({confirm: false});
-            }
-        },
-        'confirm-shutdown-kernel':{
-            icon: 'fa-repeat',
-            help_index : 'hb',
-            help: 'Shutdown the kernel (with confirmation dialog)',
-            handler : function (env) {
-                env.notebook.shutdown_kernel();
-            }
-        },
         'restart-kernel': {
             help: 'restart the kernel (no confirmation dialog)',
             handler: function (env) {
@@ -178,34 +152,6 @@ define(function(require){
             help_index : 'aa',
             handler : function (env) {
                 env.notebook.command_mode();
-            }
-        },
-        'insert-image': {
-            help      : 'insert image',
-            help_index : 'dz',
-            handler : function (env) {
-                env.notebook.insert_image();
-            }
-        },
-        'cut-cell-attachments': {
-            help    : 'cut cell attachments',
-            help_index : 'dza',
-            handler: function (env) {
-                env.notebook.cut_cell_attachments();
-            }
-        },
-        'copy-cell-attachments': {
-            help    : 'copy cell attachments',
-            help_index: 'dzb',
-            handler: function (env) {
-                env.notebook.copy_cell_attachments();
-            }
-        },
-        'paste-cell-attachments': {
-            help    : 'paste cell attachments',
-            help_index: 'dzc',
-            handler: function (env) {
-                env.notebook.paste_cell_attachments();
             }
         },
         'split-cell-at-cursor': {
@@ -483,95 +429,19 @@ define(function(require){
                 env.notebook.show_command_palette();
             }
         },
-        'toggle-all-line-numbers': {
-            help : 'toggles line numbers in all cells, and persist the setting',
-            icon: 'fa-list-ol',
-            handler: function(env) {
-                var value = !env.notebook.line_numbers;
-                env.notebook.get_cells().map(function(c) {
-                    c.code_mirror.setOption('lineNumbers', value);
-                });
-                env.notebook.line_numbers = value;
-            }
-        },
-        'show-all-line-numbers': {
-            help : 'show line numbers in all cells, and persist the setting',
-            handler: function(env) {
-                env.notebook.get_cells().map(function(c) {
-                    c.code_mirror.setOption('lineNumbers', true);
-                });
-                env.notebook.line_numbers = true;
-            }
-        },
-        'hide-all-line-numbers': {
-            help : 'hide line numbers in all cells, and persist the setting',
-            handler: function(env) {
-                env.notebook.get_cells().map(function(c) {
-                    c.code_mirror.setOption('lineNumbers', false);
-                });
-                env.notebook.line_numbers = false;
+        'toggle-toolbar':{
+            help: 'hide/show the toolbar',
+            handler : function(env){
+                $('div#maintoolbar').toggle();
+                events.trigger('resize-header.Page');
             }
         },
         'toggle-header':{
             help: 'hide/show the header',
-            handler : function(env) {
-                var value = !env.notebook.header;
-                if (value === true) {
-                    $('#header-container').show();
-                    $('.header-bar').show();
-                } else if (value === false) {
-                    $('#header-container').hide();
-                    $('.header-bar').hide();
-                }
+            handler : function(env){
+                $('#header-container').toggle();
+                $('.header-bar').toggle();
                 events.trigger('resize-header.Page');
-                env.notebook.header = value;
-            }
-        },
-        'show-header':{
-            help: 'show the header',
-            handler : function(env) {
-                $('#header-container').show();
-                $('.header-bar').show();
-                events.trigger('resize-header.Page');
-                env.notebook.header = true;
-            }
-        },
-        'hide-header':{
-            help: 'hide the header',
-            handler : function(env) {
-                $('#header-container').hide();
-                $('.header-bar').hide();
-                events.trigger('resize-header.Page');
-                env.notebook.header = false;
-            }
-        },
-        'toggle-toolbar':{
-            help: 'hide/show the toolbar',
-            handler : function(env) {
-                var value = !env.notebook.toolbar;
-                if (value === true) {
-                    $('div#maintoolbar').show();
-                } else if (value === false) {
-                    $('div#maintoolbar').hide();
-                }
-                events.trigger('resize-header.Page');
-                env.notebook.toolbar = value;
-            }
-        },
-        'show-toolbar':{
-            help: 'show the toolbar',
-            handler : function(env) {
-                $('div#maintoolbar').show();
-                events.trigger('resize-header.Page');
-                env.notebook.toolbar = true;
-            }
-        },
-        'hide-toolbar':{
-            help: 'hide the toolbar',
-            handler : function(env) {
-                $('div#maintoolbar').hide();
-                events.trigger('resize-header.Page');
-                env.notebook.toolbar = false;
             }
         },
         'close-pager': {
@@ -816,7 +686,7 @@ define(function(require){
             data = {handler:data};
         }
         if(typeof(data.handler) !== 'function'){
-            throw new Error('unknown datatype, cannot register');
+            throw('unknown datatype, cannot register');
         }
         var _data = data;
         data = {};

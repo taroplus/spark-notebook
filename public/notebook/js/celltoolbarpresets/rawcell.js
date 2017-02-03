@@ -2,10 +2,11 @@
 // Distributed under the terms of the Modified BSD License.
 
 define([
+    'jquery',
     'notebook/js/celltoolbar',
     'base/js/dialog',
     'base/js/keyboard',
-], function(celltoolbar, dialog, keyboard) {
+], function($, celltoolbar, dialog, keyboard) {
     "use strict";
 
   var CellToolbar = celltoolbar.CellToolbar;
@@ -78,6 +79,7 @@ define([
     raw_cell_preset.push('raw_cell.select');
 
     CellToolbar.register_preset('Raw Cell Format', raw_cell_preset, notebook);
+    console.log('Raw Cell Format toolbar preset loaded.');
   };
   return {'register': register};
 

@@ -2,9 +2,10 @@
 // Distributed under the terms of the Modified BSD License.
 
 define([
+    'jquery',
     'base/js/utils',
     ],
-function(utils) {
+function($, utils) {
     "use strict";
     var ConfigSection = function(section_name, options) {
         this.section_name = section_name;
@@ -81,7 +82,7 @@ function(utils) {
         if (this.classname) {
             return this.section.data[this.classname] || {};
         } else {
-            return this.section.data;
+            return this.section.data
         }
     };
     
@@ -92,7 +93,7 @@ function(utils) {
     ConfigWithDefaults.prototype.get = function(key) {
         var that = this;
         return this.section.loaded.then(function() {
-            return that.get_sync(key);
+            return that._class_data()[key] || that.defaults[key]
         });
     };
     
@@ -101,22 +102,7 @@ function(utils) {
      * instead of waiting for it to load.
      */
     ConfigWithDefaults.prototype.get_sync = function(key) {
-        var data = this._class_data();
-        if (key === undefined) {
-            // no key specified, return full config data
-            return $.extend(true, {}, this.defaults, data);
-        }
-
-        var value = data[key];
-        if (value !== undefined) {
-            if (typeof value == 'object') {
-                // merge with defaults if it's an object
-                return $.extend(true, {}, this.defaults[key], value);
-            } else {
-                return value;
-            }
-        }
-        return this.defaults[key];
+        return this._class_data()[key] || this.defaults[key];
     };
     
     /**

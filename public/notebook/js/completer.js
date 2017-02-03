@@ -254,8 +254,10 @@ define([
 
             //build the container
             var that = this;
-            this.sel.click(function () {
+            this.sel.dblclick(function () {
                 that.pick();
+            });
+            this.sel.focus(function () {
                 that.editor.focus();
             });
             this._handle_keydown = function (cm, event) {

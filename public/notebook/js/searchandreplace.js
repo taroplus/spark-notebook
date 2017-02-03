@@ -1,7 +1,6 @@
 define(function(require){
   "use strict";
 
-  var $ = require('jquery');
   var dialog = require('base/js/dialog');
 
   /**

@@ -30,7 +30,6 @@ define([
          *          base_url : string
          *          notebook_path : string
          *          notebook_name : string
-         *          config: ConfigSection instance
          */
         options = options || {};
         this.base_url = options.base_url || utils.get_body_data("baseUrl");
@@ -42,7 +41,6 @@ define([
         this.save_widget = options.save_widget;
         this.quick_help = options.quick_help;
         this.actions = options.actions;
-        this.config = options.config;
 
         try {
             this.tour = new tour.Tour(this.notebook, this.events);
@@ -54,7 +52,6 @@ define([
         if (this.selector !== undefined) {
             this.element = $(selector);
             this.style();
-            this.add_bundler_items();
             this.bind_events();
         }
     };
@@ -70,64 +67,6 @@ define([
             }
         );
     };
-    
-    MenuBar.prototype.add_bundler_items = function() {
-        var that = this;
-        this.config.loaded.then(function() {
-            var bundlers = that.config.data.bundlerextensions;
-            if(bundlers) {
-                // Stable sort the keys to ensure menu items don't hop around
-                var ids = Object.keys(bundlers).sort()
-                ids.forEach(function(bundler_id) {
-                    var bundler = bundlers[bundler_id];
-                    var group = that.element.find('#'+bundler.group+'_menu')
-                    
-                    // Validate menu item metadata
-                    if(!group.length) {
-                        console.warn('unknown group', bundler.group, 'for bundler ID', bundler_id, '; skipping');
-                        return;
-                    } else if(!bundler.label) {
-                        console.warn('no label for bundler ID', bundler_id, '; skipping');
-                        return;
-                    }
-                    
-                    // Insert menu item into correct group, click handler
-                    group.parent().removeClass('hidden');
-                    var $li = $('<li>')
-                        .appendTo(group);
-                    $('<a>')
-                        .attr('href', '#')
-                        .text(bundler.label)
-                        .appendTo($li)
-                        .on('click', that._bundle.bind(that, bundler_id))
-                        .appendTo($li);
-                });
-            }
-        });
-    };
-
-    MenuBar.prototype._new_window = function(url) {
-        var w = window.open('', IPython._target);
-        if (this.notebook.dirty && this.notebook.writable) {
-            this.notebook.save_notebook().then(function() {
-                w.location = url;
-            });
-        } else {
-            w.location = url;
-        }
-    };
-    
-    MenuBar.prototype._bundle = function(bundler_id) {
-        // Read notebook path and base url here in case they change
-        var notebook_path = utils.encode_uri_components(this.notebook.notebook_path);
-        var url = utils.url_path_join(
-            this.base_url,
-            'bundle',
-            notebook_path
-        ) + '?bundler=' + utils.encode_uri_components(bundler_id);
-
-        this._new_window(url);
-    };
 
     MenuBar.prototype._nbconvert = function (format, download) {
         download = download || false;
@@ -139,7 +78,14 @@ define([
             notebook_path
         ) + "?download=" + download.toString();
         
-        this._new_window(url);
+        var w = window.open('', IPython._target);
+        if (this.notebook.dirty && this.notebook.writable) {
+            this.notebook.save_notebook().then(function() {
+                w.location = url;
+            });
+        } else {
+            w.location = url;
+        }
     };
 
     MenuBar.prototype._size_header = function() {
@@ -209,6 +155,7 @@ define([
             that._nbconvert('script', true);
         });
 
+
         this.events.on('trust_changed.Notebook', function (event, trusted) {
             if (trusted) {
                 that.element.find('#trust_notebook')
@@ -250,7 +197,6 @@ define([
             '#rename_notebook' : 'rename-notebook',
             '#find_and_replace' : 'find-and-replace',
             '#save_checkpoint': 'save-notebook',
-            '#shutdown_kernel': 'confirm-shutdown-kernel',
             '#restart_kernel': 'confirm-restart-kernel',
             '#restart_clear_output': 'confirm-restart-kernel-and-clear-output',
             '#restart_run_all': 'confirm-restart-kernel-and-run-all-cells',
@@ -266,7 +212,6 @@ define([
             '#move_cell_down': 'move-cell-down',
             '#toggle_header': 'toggle-header',
             '#toggle_toolbar': 'toggle-toolbar',
-            '#toggle_line_numbers': 'toggle-all-line-numbers',
             '#insert_cell_above': 'insert-cell-above',
             '#insert_cell_below': 'insert-cell-below',
             '#run_cell': 'run-cell',
@@ -284,10 +229,6 @@ define([
             '#toggle_all_output': 'toggle-all-cells-output-collapsed',
             '#toggle_all_output_scroll': 'toggle-all-cells-output-scrolled',
             '#clear_all_output': 'clear-all-cells-output',
-            '#cut_cell_attachments': 'cut-cell-attachments',
-            '#copy_cell_attachments': 'copy-cell-attachments',
-            '#paste_cell_attachments': 'paste-cell-attachments',
-            '#insert_image': 'insert-image',
         };
 
         for(var idx in id_actions_dict){
@@ -458,7 +399,7 @@ define([
                 .append($("<a>")
                     .attr('target', '_blank')
                     .attr('title', 'Opens in a new window')
-                    .attr('href', requirejs.toUrl(link.url))
+                    .attr('href', require.toUrl(link.url))
                     .append($("<i>")
                         .addClass("fa fa-external-link menu-icon pull-right")
                     )

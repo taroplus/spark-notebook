@@ -16,8 +16,7 @@ define([
     'codemirror/keymap/sublime',
     'codemirror/keymap/vim',
     ],
-function(
-    $,
+function($,
     utils,
     CodeMirror
 ) {

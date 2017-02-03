@@ -2,8 +2,8 @@
 // Distributed under the terms of the Modified BSD License.
 
 define([
-    'jquery',
     'base/js/utils',
+    'jquery',
     'notebook/js/cell',
     'base/js/security',
     'services/config',
@@ -14,8 +14,8 @@ define([
     'codemirror/mode/gfm/gfm',
     'notebook/js/codemirror-ipythongfm'
 ], function(
-    $,
     utils,
+    $,
     cell,
     security,
     configmod,
@@ -27,8 +27,6 @@ define([
     ipgfm
     ) {
     "use strict";
-    function encodeURIandParens(uri){return encodeURI(uri).replace('(','%28').replace(')','%29')}
-
     var Cell = cell.Cell;
 
     var TextCell = function (options) {
@@ -55,11 +53,11 @@ define([
         this.notebook = options.notebook;
         this.events = options.events;
         this.config = options.config;
-        this.notebook = options.notebook;
         
         // we cannot put this as a class key as it has handle to "this".
+        var config = utils.mergeopt(TextCell, this.config);
         Cell.apply(this, [{
-                    config: options.config, 
+                    config: config, 
                     keyboard_manager: options.keyboard_manager, 
                     events: this.events}]);
 
@@ -72,6 +70,7 @@ define([
 
     TextCell.options_default = {
         cm_config : {
+            extraKeys: {"Tab": "indentMore","Shift-Tab" : "indentLess"},
             mode: 'htmlmixed',
             lineWrapping : true,
         }
@@ -114,20 +113,11 @@ define([
         inner_cell.append(input_area).append(render_area);
         cell.append(inner_cell);
         this.element = cell;
-        this.inner_cell = inner_cell;
     };
 
 
     // Cell level actions
-
-    TextCell.prototype.add_attachment = function (key, mime_type, b64_data) {
-        /**
-         * Add a new attachment to this cell
-         */
-        this.attachments[key] = {};
-        this.attachments[key][mime_type] = [b64_data];
-    };
-
+    
     TextCell.prototype.select = function () {
         var cont = Cell.prototype.select.apply(this, arguments);
         if (cont) {
@@ -198,10 +188,6 @@ define([
     TextCell.prototype.fromJSON = function (data) {
         Cell.prototype.fromJSON.apply(this, arguments);
         if (data.cell_type === this.cell_type) {
-            if (data.attachments !== undefined) {
-                this.attachments = data.attachments;
-            }
-
             if (data.source !== undefined) {
                 this.set_text(data.source);
                 // make this value the starting point, so that we can only undo
@@ -217,52 +203,13 @@ define([
     };
 
     /** Generate JSON from cell
-     * @param {bool} gc_attachments - If true, will remove unused attachments
-     *               from the returned JSON
      * @return {object} cell data serialised to json
      */
-    TextCell.prototype.toJSON = function (gc_attachments) {
-        if (gc_attachments === undefined) {
-            gc_attachments = false;
-        }
-
+    TextCell.prototype.toJSON = function () {
         var data = Cell.prototype.toJSON.apply(this);
         data.source = this.get_text();
         if (data.source == this.placeholder) {
             data.source = "";
-        }
-
-        // We deepcopy the attachments so copied cells don't share the same
-        // objects
-        if (Object.keys(this.attachments).length > 0) {
-            if (gc_attachments) {
-                // Garbage collect unused attachments : The general idea is to
-                // render the text, and find used attachments like when we
-                // substitute them in render()
-                data.attachments = {};
-                var that = this;
-                // To find attachments, rendering to HTML is easier than
-                // searching in the markdown source for the multiple ways you
-                // can reference an image in markdown (using []() or a
-                // HTML <img>)
-                var text = this.get_text();
-                marked(text, function (err, html) {
-                    html = security.sanitize_html(html);
-                    html = $($.parseHTML(html));
-                    html.find('img[src^="attachment:"]').each(function (i, h) {
-                        h = $(h);
-                        var key = h.attr('src').replace(/^attachment:/, '');
-                        if (key in that.attachments) {
-                            data.attachments[key] = JSON.parse(JSON.stringify(
-                                that.attachments[key]));
-                        }
-
-                        // This is to avoid having the browser do a GET request
-                        // on the invalid attachment: URL
-                        h.attr('src', '');
-                    });
-                });
-            }
         }
         return data;
     };
@@ -281,15 +228,12 @@ define([
          *          notebook: Notebook instance
          */
         options = options || {};
-        var config_default = utils.mergeopt(TextCell, MarkdownCell.options_default);
+        var config = utils.mergeopt(MarkdownCell, {});
         this.class_config = new configmod.ConfigWithDefaults(options.config,
-                                            config_default, 'MarkdownCell');
-        TextCell.apply(this, [$.extend({}, options, {config: options.config})]);
+                                            {}, 'MarkdownCell');
+        TextCell.apply(this, [$.extend({}, options, {config: config})]);
 
         this.cell_type = 'markdown';
-
-        // Used to keep track of drag events
-        this.drag_counter = 0;
     };
 
     MarkdownCell.options_default = {
@@ -316,66 +260,10 @@ define([
         }
     };
 
-    MarkdownCell.prototype.select = function () {
-        var cont = TextCell.prototype.select.apply(this, arguments);
-        if (cont) {
-            this.notebook.set_insert_image_enabled(!this.rendered);
-        }
-    };
-
-    MarkdownCell.prototype.unrender = function () {
-        var cont = TextCell.prototype.unrender.apply(this);
-        this.notebook.set_insert_image_enabled(true);
-    };
-
-    MarkdownCell.prototype.insert_inline_image_from_blob = function(blob) {
-        /**
-         * Insert markup for an inline image at the current cursor position.
-         * This works as follow :
-         * - We insert the base64-encoded blob data into the cell attachments
-         *   dictionary, keyed by the filename.
-         * - We insert an img tag with a 'attachment:key' src that refers to
-         *   the attachments entry.
-         *
-         * Parameters:
-         *  file: Blob
-         *      The JS Blob object (e.g. from the DataTransferItem)
-         */
-        var that = this;
-        var pos = this.code_mirror.getCursor();
-        var reader = new FileReader;
-        // We can get either a named file (drag'n'drop) or a blob (copy/paste)
-        // We generate names for blobs
-        var key;
-        if (blob.name !== undefined) {
-            key = encodeURIandParens(blob.name);
-        } else {
-            key = '_auto_' + Object.keys(that.attachments).length;
-        }
-
-        reader.onloadend = function() {
-            var d = utils.parse_b64_data_uri(reader.result);
-            if (blob.type != d[0]) {
-                // TODO(julienr): Not sure what we should do in this case
-                console.log('File type (' + blob.type + ') != data-uri ' +
-                            'type (' + d[0] + ')');
-            }
-            that.add_attachment(key, blob.type, d[1]);
-            var img_md = '![' + key + '](attachment:' + key + ')';
-            that.code_mirror.replaceRange(img_md, pos);
-        }
-        reader.readAsDataURL(blob);
-    };
-
     /**
      * @method render
      */
     MarkdownCell.prototype.render = function () {
-        // We clear the dropzone here just in case the dragenter/leave
-        // logic of bind_events wasn't 100% successful.
-        this.drag_counter = 0;
-        this.inner_cell.removeClass('dropzone');
-
         var cont = TextCell.prototype.render.apply(this);
         if (cont) {
             var that = this;
@@ -406,20 +294,6 @@ define([
                 });
                 // links in markdown cells should open in new tabs
                 html.find("a[href]").not('[href^="#"]').attr("target", "_blank");
-                // replace attachment:<key> by the corresponding entry
-                // in the cell's attachments
-                html.find('img[src^="attachment:"]').each(function (i, h) {
-                  h = $(h);
-                  var key = h.attr('src').replace(/^attachment:/, '');
-
-                  if (key in that.attachments) {
-                    var att = that.attachments[key];
-                    var mime = Object.keys(att)[0];
-                    h.attr('src', 'data:' + mime + ';base64,' + att[mime][0]);
-                  } else {
-                    h.attr('src', '');
-                  }
-                });
                 that.set_rendered(html);
                 that.typeset();
                 that.events.trigger("rendered.MarkdownCell", {cell: that});
@@ -439,82 +313,7 @@ define([
                 that.focus_editor();
             }
         });
-
-        var attachment_regex = /^image\/.*$/;
-
-        // Event handlers to allow users to insert image using either
-        // drag'n'drop or copy/paste
-        var div = that.code_mirror.getWrapperElement();
-        $(div).on('paste', function(evt) {
-            var data = evt.originalEvent.clipboardData;
-            var items = data.items;
-            if (data.items !== undefined) {
-                for (var i = 0; i < items.length; ++i) {
-                    var item = items[i];
-                    if (item.kind == 'file' && attachment_regex.test(item.type)) {
-                        // TODO(julienr): This does not stop code_mirror from pasting
-                        // the filename.
-                        evt.stopPropagation();
-                        evt.preventDefault();
-                        that.insert_inline_image_from_blob(item.getAsFile());
-                    }
-                }
-            }
-        });
-
-        // Allow drag event if the dragged file can be used as an attachment
-        // If we use this.code_mirror.on to register a "dragover" handler, we
-        // get an empty dataTransfer
-        this.code_mirror.on("dragover", function(cm, evt) {
-            if (utils.dnd_contain_file(evt)) {
-                evt.preventDefault();
-            }
-        });
-
-        // We want to display a visual indicator that the drop is possible.
-        // The dragleave event is fired when we hover a child element (which
-        // is often immediatly after we got the dragenter), so we keep track
-        // of the number of dragenter/dragleave we got, as discussed here :
-        // http://stackoverflow.com/q/7110353/116067
-        // This doesn't seem to be 100% reliable, so we clear the dropzone
-        // class when the cell is rendered as well
-        this.code_mirror.on("dragenter", function(cm, evt) {
-            if (utils.dnd_contain_file(evt)) {
-                that.drag_counter++;
-                that.inner_cell.addClass('dropzone');
-            }
-            evt.preventDefault();
-            evt.stopPropagation();
-        });
-
-        this.code_mirror.on("dragleave", function(cm, evt) {
-            that.drag_counter--;
-            if (that.drag_counter <= 0) {
-                that.inner_cell.removeClass('dropzone');
-            }
-            evt.preventDefault();
-            evt.stopPropagation();
-        });
-
-        this.code_mirror.on("drop", function(cm, evt) {
-            that.drag_counter = 0;
-            that.inner_cell.removeClass('dropzone');
-
-            var files = evt.dataTransfer.files;
-            for (var i = 0; i < files.length; ++i) {
-                var file = files[i];
-                if (attachment_regex.test(file.type)) {
-                    // Prevent the default code_mirror 'drop' event handler
-                    // (which inserts the file content) if this is a
-                    // recognized media file
-                    evt.stopPropagation();
-                    evt.preventDefault();
-                    that.insert_inline_image_from_blob(file);
-                }
-            }
-        });
     };
-
 
     var RawCell = function (options) {
         /**
@@ -529,20 +328,24 @@ define([
          *          notebook: Notebook instance
          */
         options = options || {};
-        var config_default = utils.mergeopt(TextCell, RawCell.options_default);
+        var config = utils.mergeopt(RawCell, {});
+        TextCell.apply(this, [$.extend({}, options, {config: config})]);
+
         this.class_config = new configmod.ConfigWithDefaults(options.config,
-                                            config_default, 'RawCell');
-        TextCell.apply(this, [$.extend({}, options, {config: options.config})]);
+                                            RawCell.config_defaults, 'RawCell');
         this.cell_type = 'raw';
     };
 
     RawCell.options_default = {
+        placeholder : "Write raw LaTeX or other formats here, for use with nbconvert. " +
+            "It will not be rendered in the notebook. " + 
+            "When passing through nbconvert, a Raw Cell's content is added to the output unmodified."
+    };
+    
+    RawCell.config_defaults =  {
         highlight_modes : {
             'diff'         :{'reg':[/^diff/]}
         },
-        placeholder : "Write raw LaTeX or other formats here, for use with nbconvert. " +
-            "It will not be rendered in the notebook. " +
-            "When passing through nbconvert, a Raw Cell's content is added to the output unmodified.",
     };
 
     RawCell.prototype = Object.create(TextCell.prototype);

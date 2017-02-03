@@ -73,10 +73,10 @@ define(function(){
     // tree
     jglobal('SessionList','tree/js/sessionlist');
 
-    Jupyter.version = "5.0.0.dev";
+    Jupyter.version = "4.3.2";
     Jupyter._target = '_blank';
     return Jupyter;
 });
 
 // deprecated since 4.0, remove in 5+
-var IPython = Jupyter;
+var IPython = Jupyter

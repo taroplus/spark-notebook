@@ -30,7 +30,6 @@ define([
         this.id = null;
         this.name = name;
         this.ws = null;
-        this._stopping = false;
 
         this.kernel_service_url = kernel_service_url;
         this.kernel_url = null;
@@ -43,8 +42,6 @@ define([
         this.username = "username";
         this.session_id = utils.uuid();
         this._msg_callbacks = {};
-        this._msg_callbacks_overrides = {};
-        this._display_id_to_parent_ids = {};
         this._msg_queue = Promise.resolve();
         this.info_reply = {}; // kernel_info_reply stored here after starting
 
@@ -133,7 +130,7 @@ define([
      * @function init_iopub_handlers
      */
     Kernel.prototype.init_iopub_handlers = function () {
-        var output_msg_types = ['stream', 'display_data', 'execute_result', 'error', 'update_display_data'];
+        var output_msg_types = ['stream', 'display_data', 'execute_result', 'error'];
         this._iopub_handlers = {};
         this.register_iopub_handler('status', $.proxy(this._handle_status_message, this));
         this.register_iopub_handler('clear_output', $.proxy(this._handle_clear_output, this));
@@ -303,9 +300,6 @@ define([
          */
         this.events.trigger('kernel_restarting.Kernel', {kernel: this});
         this.stop_channels();
-        this._msg_callbacks = {};
-        this._msg_callbacks_overrides = {};
-        this._display_id_to_parent_ids = {};
 
         var that = this;
         var on_success = function (data, status, xhr) {
@@ -317,7 +311,7 @@ define([
         };
 
         var on_error = function (xhr, status, err) {
-            that.events.trigger('kernel_failed_restart.Kernel', {kernel: that});
+            that.events.trigger('kernel_dead.Kernel', {kernel: that});
             that._kernel_dead();
             if (error) {
                 error(xhr, status, err);
@@ -457,7 +451,7 @@ define([
         var ws_host_url = this.ws_url + this.kernel_url;
 
         console.log("Starting WebSockets:", ws_host_url);
-
+        
         this.ws = new this.WebSocket([
                 that.ws_url,
                 utils.url_path_join(that.kernel_url, 'channels'),
@@ -508,7 +502,7 @@ define([
         this.ws.onerror = ws_error;
         // switch from early-close to late-close message after 1s
         setTimeout(function() {
-            if (that.ws !== null && !that._stopping) {
+            if (that.ws !== null) {
                 that.ws.onclose = ws_closed_late;
             }
         }, 1000);
@@ -579,14 +573,11 @@ define([
          */
         var that = this;
         var close = function () {
-            that._stopping = false;
             if (that.ws && that.ws.readyState === WebSocket.CLOSED) {
                 that.ws = null;
             }
         };
         if (this.ws !== null) {
-            // flag to avoid races with on_close_late
-            this._stopping = true;
             if (this.ws.readyState === WebSocket.OPEN) {
                 this.ws.onclose = close;
                 this.ws.close();
@@ -641,7 +632,7 @@ define([
         } else {
             this._pending_messages.push(msg);
         }
-    };
+    }
     
     Kernel.prototype.send_shell_message = function (msg_type, content, callbacks, metadata, buffers) {
         /**
@@ -736,7 +727,6 @@ define([
          *      @param callbacks.iopub.output {function}
          *      @param callbacks.iopub.clear_output {function}
          *      @param callbacks.input {function}
-         *      @param callbacks.clear_on_done=true {Bolean}
          * @param {object} [options]
          *      @param [options.silent=false] {Boolean}
          *      @param [options.user_expressions=empty_dict] {Dict}
@@ -858,60 +848,12 @@ define([
     };
 
     /**
-     * Get output callbacks for a specific message.
-     *
-     * @function get_output_callbacks_for_msg
-     *
-     * Since output callbacks can be overridden, we first check the override stack.
-     */
-    Kernel.prototype.get_output_callbacks_for_msg = function (msg_id) {
-        return this.get_callbacks_for_msg(this.get_output_callback_id(msg_id));
-    };
-
-
-    /**
-     * Get the output callback id for a message
-     *
-     * Since output callbacks can be redirected, this may not be the same as
-     * the msg_id.
-     *
-     * @function get_output_callback_id
-     */
-    Kernel.prototype.get_output_callback_id = function (msg_id) {
-        var callback_id = msg_id;
-        var overrides = this._msg_callbacks_overrides[msg_id];
-        if (overrides && overrides.length > 0) {
-            callback_id = overrides[overrides.length-1];
-        }
-        return callback_id
-    }
-
-    /**
      * Clear callbacks for a specific message.
      *
      * @function clear_callbacks_for_msg
      */
     Kernel.prototype.clear_callbacks_for_msg = function (msg_id) {
         if (this._msg_callbacks[msg_id] !== undefined ) {
-            var callbacks = this._msg_callbacks[msg_id];
-            var kernel = this;
-            // clear display_id:msg_id map for display_ids associated with this msg_id
-            if (!callbacks) return;
-            callbacks.display_ids.map(function (display_id) {
-                var msg_ids = kernel._display_id_to_parent_ids[display_id];
-                if (msg_ids) {
-                    var idx = msg_ids.indexOf(msg_id);
-                    if (idx === -1) {
-                        return;
-                    }
-                    if (msg_ids.length === 1) {
-                        delete kernel._display_id_to_parent_ids[display_id];
-                    } else {
-                        msg_ids.splice(idx, 1);
-                        kernel._display_id_to_parent_ids[display_id] = msg_ids;
-                    }
-                }
-            });
             delete this._msg_callbacks[msg_id];
         }
     };
@@ -923,7 +865,7 @@ define([
         var callbacks = this._msg_callbacks[msg_id];
         if (callbacks !== undefined) {
             callbacks.shell_done = true;
-            if (callbacks.clear_on_done && callbacks.iopub_done) {
+            if (callbacks.iopub_done) {
                 this.clear_callbacks_for_msg(msg_id);
             }
         }
@@ -936,11 +878,10 @@ define([
         var callbacks = this._msg_callbacks[msg_id];
         if (callbacks !== undefined) {
             callbacks.iopub_done = true;
-            if (callbacks.clear_on_done && callbacks.shell_done) {
+            if (callbacks.shell_done) {
                 this.clear_callbacks_for_msg(msg_id);
             }
         }
-        this.events.trigger('finished_iopub.Kernel', {kernel: this, msg_id: msg_id});
     };
     
     /**
@@ -950,55 +891,23 @@ define([
      * 
      * }
      *
-     * If the third parameter is truthy, the callback is set as the last
-     * callback registered.
-     *
      * @function set_callbacks_for_msg
      */
-    Kernel.prototype.set_callbacks_for_msg = function (msg_id, callbacks, save) {
-        var remember = save || true;
-        if (remember) {
-            this.last_msg_id = msg_id;
-        }
+    Kernel.prototype.set_callbacks_for_msg = function (msg_id, callbacks) {
+        this.last_msg_id = msg_id;
         if (callbacks) {
             // shallow-copy mapping, because we will modify it at the top level
             var cbcopy = this._msg_callbacks[msg_id] = this.last_msg_callbacks = {};
             cbcopy.shell = callbacks.shell;
             cbcopy.iopub = callbacks.iopub;
             cbcopy.input = callbacks.input;
-            cbcopy.clear_on_done = callbacks.clear_on_done;
             cbcopy.shell_done = (!callbacks.shell);
             cbcopy.iopub_done = (!callbacks.iopub);
-            cbcopy.display_ids = [];
-            if (callbacks.clear_on_done === undefined) {
-                // default to clear-on-done
-                cbcopy.clear_on_done = true;
-            }
-        } else if (remember) {
+        } else {
             this.last_msg_callbacks = {};
         }
     };
-
-    /**
-     * Override output callbacks for a particular msg_id
-     */
-    Kernel.prototype.output_callback_overrides_push = function(msg_id, callback_id) {
-        var output_callbacks = this._msg_callbacks_overrides[msg_id];
-        if (!output_callbacks) {
-            this._msg_callbacks_overrides[msg_id] = output_callbacks = [];
-        }
-        output_callbacks.push(callback_id);
-    }
-
-    Kernel.prototype.output_callback_overrides_pop = function(msg_id) {
-        var callback_ids = this._msg_callbacks_overrides[msg_id];
-        if (!callback_ids) {
-            console.error("Popping callback overrides, but none registered", msg_id);
-            return;
-        }
-        return callback_ids.pop();
-    }
-
+    
     Kernel.prototype._handle_ws_message = function (e) {
         var that = this;
         this._msg_queue = this._msg_queue.then(function() {
@@ -1123,7 +1032,7 @@ define([
      * @function _handle_clear_output
      */
     Kernel.prototype._handle_clear_output = function (msg) {
-        var callbacks = this.get_output_callbacks_for_msg(msg.parent_header.msg_id);
+        var callbacks = this.get_callbacks_for_msg(msg.parent_header.msg_id);
         if (!callbacks || !callbacks.iopub) {
             return;
         }
@@ -1139,52 +1048,7 @@ define([
      * @function _handle_output_message
      */
     Kernel.prototype._handle_output_message = function (msg) {
-        var that = this;
-        var msg_id = msg.parent_header.msg_id;
-        var callbacks = this.get_output_callbacks_for_msg(msg_id);
-        if (['display_data', 'update_display_data', 'execute_result'].indexOf(msg.header.msg_type) > -1) {
-            // display_data messages may re-route based on their display_id
-            var display_id = (msg.content.transient || {}).display_id;
-            if (display_id) {
-                // it has a display_id
-                var parent_ids = this._display_id_to_parent_ids[display_id];
-                if (parent_ids) {
-                    // we've seen it before, update existing outputs with same display_id
-                    // by handling display_data as update_display_data
-                    var update_msg = $.extend(true, {}, msg);
-                    update_msg.header.msg_type = 'update_display_data';
-
-                    parent_ids.map(function (parent_id) {
-                        var callbacks = that.get_callbacks_for_msg(parent_id);
-                        if (!callbacks) return;
-                        var callback = callbacks.iopub.output;
-                        if (callback) {
-                            callback(update_msg);
-                        }
-                    });
-                }
-                // we're done here if it's update_display
-                if (msg.header.msg_type === 'update_display_data') {
-                    // it's an update, don't proceed to the normal display
-                    return;
-                }
-                // regular display_data with id, record it for future updating
-                // in _display_id_to_parent_ids for future lookup
-                if (this._display_id_to_parent_ids[display_id] === undefined) {
-                    this._display_id_to_parent_ids[display_id] = [];
-                }
-                var callback_id = this.get_output_callback_id(msg_id);
-                if (this._display_id_to_parent_ids[display_id].indexOf(callback_id) === -1) {
-                    this._display_id_to_parent_ids[display_id].push(callback_id);
-                }
-                // and in callbacks for cleanup on clear_callbacks_for_msg
-                if (callbacks && callbacks.display_ids.indexOf(display_id) === -1) {
-                    callbacks.display_ids.push(display_id);
-                }
-            }
-        }
-
-
+        var callbacks = this.get_callbacks_for_msg(msg.parent_header.msg_id);
         if (!callbacks || !callbacks.iopub) {
             // The message came from another client. Let the UI decide what to
             // do with it.

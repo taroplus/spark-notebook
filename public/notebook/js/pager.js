@@ -2,9 +2,8 @@
 // Distributed under the terms of the Modified BSD License.
 
 define([
-    'jquery',
+    'jquery-ui',
     'base/js/utils',
-    'jquery-ui'
 ], function($, utils) {
     "use strict";
 
@@ -159,7 +158,7 @@ define([
          * The only user content injected with this HTML call is escaped by
          * the fixConsole() method.
          */
-        this.pager_element.find(".container").append($('<pre/>').html(utils.fixConsole(utils.fixOverwrittenChars(text))));
+        this.pager_element.find(".container").append($('<pre/>').html(utils.fixCarriageReturn(utils.fixConsole(text))));
     };
 
     Pager.prototype.append = function (htm) {

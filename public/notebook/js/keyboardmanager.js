@@ -37,52 +37,12 @@ define([
         this.bind_events();
         this.env = {pager:this.pager};
         this.actions = options.actions;
-        this.command_shortcuts = new keyboard.ShortcutManager(undefined, options.events, this.actions, this.env, options.config, 'command');
-        this.command_shortcuts._add_default_shortcuts(this.get_default_common_shortcuts());
-        this.command_shortcuts._add_default_shortcuts(this.get_default_command_shortcuts());
+        this.command_shortcuts = new keyboard.ShortcutManager(undefined, options.events, this.actions, this.env );
+        this.command_shortcuts.add_shortcuts(this.get_default_common_shortcuts());
+        this.command_shortcuts.add_shortcuts(this.get_default_command_shortcuts());
         this.edit_shortcuts = new keyboard.ShortcutManager(undefined, options.events, this.actions, this.env);
-        this.edit_shortcuts._add_default_shortcuts(this.get_default_common_shortcuts());
-        this.edit_shortcuts._add_default_shortcuts(this.get_default_edit_shortcuts());
-
-
-        this.config = options.config;
-        var that = this;
-
-        this.config.loaded.then(function(){ 
-            var edit_unbind;
-
-            try {
-                edit_unbind = that.config.data.keys.edit.unbind||[];
-            } catch (e) {
-                if (e instanceof TypeError) {
-                    edit_unbind = [];
-                } else {
-                    throw e;
-                }
-            }
-
-            edit_unbind.forEach(function(u){that.edit_shortcuts.remove_shortcut(u);});
-
-            var command_unbind;
-
-            try {
-                command_unbind = that.config.data.keys.command.unbind||[];
-            } catch (e) {
-                if (e instanceof TypeError) {
-                    command_unbind = [];
-                } else {
-                    throw e;
-                }
-            }
-
-            command_unbind.forEach(function(u){that.command_shortcuts.remove_shortcut(u);});
-
-            that.command_shortcuts.add_shortcuts( ((that.config.data.keys||{}).command||{}).bind);
-            that.edit_shortcuts.add_shortcuts(    ((that.config.data.keys||{}).edit   ||{}).bind);
-
-            }
-        );
-
+        this.edit_shortcuts.add_shortcuts(this.get_default_common_shortcuts());
+        this.edit_shortcuts.add_shortcuts(this.get_default_edit_shortcuts());
         Object.seal(this);
     };
 
@@ -107,7 +67,7 @@ define([
             'ctrl-enter'  : 'jupyter-notebook:run-cell',
             'alt-enter'   : 'jupyter-notebook:run-cell-and-insert-below',
             // cmd on mac, ctrl otherwise
-            'cmdtrl-s'    : 'jupyter-notebook:save-notebook'
+            'cmdtrl-s'    : 'jupyter-notebook:save-notebook',
         };
     };
 
@@ -160,7 +120,6 @@ define([
             'o' : 'jupyter-notebook:toggle-cell-output-collapsed',
             's' : 'jupyter-notebook:save-notebook',
             'l' : 'jupyter-notebook:toggle-cell-line-numbers',
-            'shift-l' : 'jupyter-notebook:toggle-all-line-numbers',
             'h' : 'jupyter-notebook:show-keyboard-shortcuts',
             'z' : 'jupyter-notebook:undo-cell-deletion',
             'q' : 'jupyter-notebook:close-pager',

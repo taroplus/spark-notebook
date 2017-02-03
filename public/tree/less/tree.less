@@ -16,8 +16,16 @@
 // The left padding of the selector button's contents.
 @dashboard-selectorbtn-lpad: 7px;
 
+[dir="rtl"] #tabs li {
+    float: right;
+}
+
 ul#tabs {
     margin-bottom: @dashboard_tb_pad;
+}
+
+[dir="rtl"] ul#tabs {
+    margin-right:0px;
 }
 
 ul#tabs a {
@@ -46,6 +54,21 @@ ul.breadcrumb {
     .tree-buttons {
         padding-top: 1px;
     }
+}
+
+[dir="rtl"] .list_toolbar {
+    .tree-buttons {
+        float: left !important;
+    }
+    
+    .pull-right {
+        padding-top: 1px;
+        float: left !important;
+    }
+    
+    .pull-left {
+        float: right !important;
+    }    
 }
 
 .dynamic-buttons {
@@ -139,11 +162,6 @@ ul.breadcrumb {
     vertical-align: baseline;
 }
 
-.item_modified {
-    margin-right: @dashboard_lr_pad;
-    margin-left: @dashboard_lr_pad;
-}
-
 .item_buttons {
     line-height: 1em;
     .btn-toolbar();
@@ -193,13 +211,12 @@ ul.breadcrumb {
     }
 }
 
-.sort_button {
-    display: inline-block;
-    padding-left: @dashboard_lr_pad;
-}
-
 #tree-selector {
     padding-right: 0px;
+}
+
+[dir="rtl"] #tree-selector a {
+    float: right;
 }
 
 #button-select-all {
@@ -256,11 +273,8 @@ ul#new-menu {
     right: 0;
 }
 
-#new-menu .dropdown-header {
-    font-size: 10px;
-    border-bottom: 1px solid #e5e5e5;
-    padding: 0 0 3px;
-    margin: -3px 20px 0;
+[dir="rtl"] #new-menu {
+    text-align: right;
 }
 
 .kernel-menu-icon {
@@ -322,6 +336,12 @@ ul#new-menu {
     }
 }
 
+[dir="rtl"] #running {
+    .col-sm-8 {
+        float: right !important;
+    }
+}
+
 .delete-button {
     display: none;
 }
@@ -331,14 +351,6 @@ ul#new-menu {
 }
 
 .rename-button {
-    display: none;
-}
-
-.move-button {
-    display: none;
-}
-
-.download-button {
     display: none;
 }
 

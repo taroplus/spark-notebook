@@ -18,9 +18,6 @@ define([
                     processEscapes: true,
                     processEnvironments: true
                 },
-                MathML: {
-                    extensions: ['content-mathml.js']
-                },
                 // Center justify equations in code and markdown cells. Elsewhere
                 // we use CSS to left justify single line equations in code cells.
                 displayAlign: 'center',

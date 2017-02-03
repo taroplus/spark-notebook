@@ -3,23 +3,24 @@
 
 require([
     'jquery',
-    'contents',
     'base/js/namespace',
     'base/js/utils',
     'base/js/page',
     'base/js/events',
+    'contents',
     'services/config',
     'edit/js/editor',
     'edit/js/menubar',
     'edit/js/savewidget',
     'edit/js/notificationarea',
+    'custom',
 ], function(
     $,
-    contents_service,
     IPython,
     utils,
     page,
     events,
+    contents,
     configmod,
     editmod,
     menubar,
@@ -28,13 +29,6 @@ require([
     ){
     "use strict";
 
-    try {
-        requirejs(['custom/custom'], function() {});
-    } catch(err) {
-        console.log("Error loading custom.js from edition service. Continuing and logging");
-        console.warn(err);
-    }
-    
     page = new page.Page();
 
     var base_url = utils.get_body_data('baseUrl');
@@ -43,7 +37,7 @@ require([
     config.load();
     var common_config = new configmod.ConfigSection('common', {base_url: base_url});
     common_config.load();
-    var contents = new contents_service.Contents({
+    contents = new contents.Contents({
         base_url: base_url,
         common_config: common_config
     });

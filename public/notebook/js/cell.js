@@ -15,9 +15,8 @@ define([
     'codemirror/lib/codemirror',
     'codemirror/addon/edit/matchbrackets',
     'codemirror/addon/edit/closebrackets',
-    'codemirror/addon/comment/comment',
-    'services/config',
-], function($, utils, CodeMirror, cm_match, cm_closeb, cm_comment, configmod) {
+    'codemirror/addon/comment/comment'
+], function($, utils, CodeMirror, cm_match, cm_closeb, cm_comment) {
     "use strict";
     
     var overlayHack = CodeMirror.scrollbarModel.native.prototype.overlayHack;
@@ -50,9 +49,10 @@ define([
         options = options || {};
         this.keyboard_manager = options.keyboard_manager;
         this.events = options.events;
-        var config = options.config;
+        var config = utils.mergeopt(Cell, options.config);
         // superclass default overwrite our default
         
+        this.placeholder = config.placeholder || '';
         this.selected = false;
         this.anchor = false;
         this.rendered = false;
@@ -71,7 +71,6 @@ define([
             }
         });
 
-
         // backward compat.
         Object.defineProperty(this, 'cm_config', {
             get: function() {
@@ -83,21 +82,14 @@ define([
         // load this from metadata later ?
         this.user_highlight = 'auto';
 
-        // merge my class-specific config data with general cell-level config
-        var class_config_data = {};
-        if (this.class_config) {
-            class_config_data = this.class_config.get_sync();
+
+        var _local_cm_config = {};
+        if(this.class_config){
+            _local_cm_config = this.class_config.get_sync('cm_config');
         }
-
-        var cell_config = new configmod.ConfigWithDefaults(options.config,
-            Cell.options_default, 'Cell');
-        var cell_config_data = cell_config.get_sync();
-
-        // this._options is a merge of SomeCell and Cell config data:
-        this._options = utils.mergeopt({}, cell_config_data, class_config_data);
-        this.placeholder = this._options.placeholder || '';
-
+        config.cm_config = utils.mergeopt({}, config.cm_config, _local_cm_config);
         this.cell_id = utils.uuid();
+        this._options = config;
 
         // For JS VM engines optimization, attributes should be all set (even
         // to null) in the constructor, and if possible, if different subclass
@@ -107,12 +99,6 @@ define([
         this.element = null;
         this.cell_type = this.cell_type || null;
         this.code_mirror = null;
-
-        // The nbformat only specifies attachments for textcell, but to avoid
-        // data loss when switching between cell types in the UI, all cells
-        // have an attachments property here. It is only saved to disk
-        // for textcell though (in toJSON)
-        this.attachments = {};
 
         this.create_element();
         if (this.element !== null) {
@@ -128,15 +114,9 @@ define([
             readOnly: false,
             theme: "default",
             extraKeys: {
-                "Cmd-Right": "goLineRight",
-                "End": "goLineRight",
-                "Cmd-Left": "goLineLeft",
-                "Tab": "indentMore",
-                "Shift-Tab" : "indentLess",
-                "Cmd-Alt-[" : "indentAuto",
-                "Ctrl-Alt-[" : "indentAuto",
-                "Cmd-/" : "toggleComment",
-                "Ctrl-/" : "toggleComment",
+                "Cmd-Right":"goLineRight",
+                "End":"goLineRight",
+                "Cmd-Left":"goLineLeft"
             }
         }
     };
@@ -203,7 +183,6 @@ define([
         });
         if (this.code_mirror) {
             this.code_mirror.on("change", function(cm, change) {
-                that.events.trigger("change.Cell", {cell: that, change: change});
                 that.events.trigger("set_dirty.Notebook", {value: true});
             });
         }
@@ -288,9 +267,6 @@ define([
             this.element.addClass('selected');
             this.element.removeClass('unselected');
             this.selected = true;
-            // disable 'insert image' menu item (specific cell types will enable
-            // it in their override select())
-            this.notebook.set_insert_image_enabled(false);
             return true;
         } else {
             return false;
@@ -491,15 +467,6 @@ define([
         var data = {};
         // deepcopy the metadata so copied cells don't share the same object
         data.metadata = JSON.parse(JSON.stringify(this.metadata));
-        if (data.metadata.deletable) {
-            delete data.metadata.deletable;
-        }
-        if (data.metadata.editable) {
-            delete data.metadata.editable;
-        }
-        if (data.metadata.collapsed === false) {
-            delete data.metadata.collapsed;
-        }
         data.cell_type = this.cell_type;
         return data;
     };
@@ -511,6 +478,14 @@ define([
     Cell.prototype.fromJSON = function (data) {
         if (data.metadata !== undefined) {
             this.metadata = data.metadata;
+        }
+        // upgrade cell's editable metadata if not defined
+        if (this.metadata.editable === undefined) {
+          this.metadata.editable = this.is_editable();
+        }
+        // upgrade cell's deletable metadata if not defined
+        if (this.metadata.deletable === undefined) {
+          this.metadata.deletable = this.is_deletable();
         }
     };
 
@@ -778,7 +753,7 @@ define([
         cell.append(inner_cell);
         this.element = cell;
     };
-
+    
     UnrecognizedCell.prototype.bind_events = function () {
         Cell.prototype.bind_events.apply(this, arguments);
         var cell = this;
