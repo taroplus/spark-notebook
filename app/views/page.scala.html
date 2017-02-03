@@ -1,0 +1,119 @@
+@(bodyclasses: String, title: String)(site: Html)(script: Html)
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+
+    <title>Spark Notebook - @{title}</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <link rel="stylesheet" href="@routes.Assets.at("components/jquery-ui/themes/smoothness/jquery-ui.min.css")" type="text/css" />
+    <link rel="stylesheet" href="@routes.Assets.at("components/jquery-typeahead/dist/jquery.typeahead.min.css")" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="@routes.Assets.at("style/style.min.css")" type="text/css"/>
+    <link rel="stylesheet" href="@routes.Assets.at("custom/custom.css")" type="text/css" />
+    <script src="@routes.Assets.at("components/es6-promise/promise.min.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@routes.Assets.at("components/preact/dist/preact.min.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@routes.Assets.at("components/proptypes/index.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@routes.Assets.at("components/preact-compat/dist/preact-compat.min.js")" type="text/javascript" charset="utf-8"></script>
+    <script src="@routes.Assets.at("components/requirejs/require.js")" type="text/javascript" charset="utf-8"></script>
+    <script>
+      require.config({
+          baseUrl: '@routes.Assets.at("/")',
+          paths: {
+            'auth/js/main': 'auth/js/main.min',
+            custom : '/custom',
+            nbextensions : '/nbextensions',
+            kernelspecs : '/kernelspecs',
+            underscore : 'components/underscore/underscore-min',
+            backbone : 'components/backbone/backbone-min',
+            jquery: 'components/jquery/jquery.min',
+            bootstrap: 'components/bootstrap/js/bootstrap.min',
+            bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
+            'jquery-ui': 'components/jquery-ui/ui/minified/jquery-ui.min',
+            moment: 'components/moment/moment',
+            codemirror: 'components/codemirror',
+            termjs: 'components/xterm.js/dist/xterm',
+            typeahead: 'components/jquery-typeahead/dist/jquery.typeahead.min',
+          },
+          map: { // for backward compatibility
+              "*": {
+                  "jqueryui": "jquery-ui",
+              }
+          },
+          shim: {
+            typeahead: {
+              deps: ["jquery"],
+              exports: "typeahead"
+            },
+            underscore: {
+              exports: '_'
+            },
+            backbone: {
+              deps: ["underscore", "jquery"],
+              exports: "Backbone"
+            },
+            bootstrap: {
+              deps: ["jquery"],
+              exports: "bootstrap"
+            },
+            bootstraptour: {
+              deps: ["bootstrap"],
+              exports: "Tour"
+            },
+            "jquery-ui": {
+              deps: ["jquery"],
+              exports: "$"
+            }
+          },
+          waitSeconds: 30,
+      });
+
+      require.config({
+          map: {
+              '*':{
+                'contents': 'services/contents',
+              }
+          }
+      });
+
+      // error-catching custom.js shim.
+      define("custom", function (require, exports, module) {
+          try {
+              var custom = require('custom/custom');
+              console.debug('loaded custom.js');
+              return custom;
+          } catch (e) {
+              console.error("error loading custom.js", e);
+              return {};
+          }
+      })
+    </script>
+
+</head>
+
+<body class="@bodyclasses" data-base-url="/" data-terminals-available="False" >
+
+<noscript>
+    <div id='noscript'>
+      Jupyter Notebook requires JavaScript.<br>
+      Please enable it to proceed.
+  </div>
+</noscript>
+
+<div id="header">
+  <div id="header-container" class="container">
+  <div id="ipython_notebook" class="nav navbar-brand pull-left"><a href="/" title='dashboard'><img src='@routes.Assets.at("base/images/logo.png")' alt='Spark Notebook'></a></div>
+  </div>
+  <div class="header-bar"></div>
+
+</div>
+<div id="site">
+    @site
+</div>
+
+@script
+
+</body>
+
+</html>
