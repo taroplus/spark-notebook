@@ -1,5 +1,5 @@
-@()
-@page("notebook-tree", "home") {
+@(notebookPath: String, breadcrumbs: Seq[(String, String)])
+@page("notebook-tree", notebookPath) {
 
 <div id="ipython-main-app" class="container">
   <div id="tab_content" class="tabbable">
@@ -67,10 +67,8 @@
             </div>
             <div id="project_name">
               <ul class="breadcrumb">
-                <li><a href="{{breadcrumbs[0][0]}}"><i class="fa fa-home"></i></a></li>
-                {% for crumb in breadcrumbs[1:] %}
-                <li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li>
-                {% endfor %}
+                <li><a href="/"><i class="fa fa-home"></i></a></li>
+                @for(link <- breadcrumbs) { <li><a href="@{link._2}">@{link._1}</a></li> }
               </ul>
             </div>
           </div>

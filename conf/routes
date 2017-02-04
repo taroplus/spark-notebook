@@ -2,7 +2,16 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /                           controllers.Application.index
+GET     /                           controllers.Application.tree(path: String = null)
+GET     /tree                       controllers.Application.tree(path: String = null)
+GET     /tree/*path                 controllers.Application.tree(path: String)
+
+
+GET     /api/config/*app            controllers.Application.config(app: String)
+GET     /api/kernelspecs            controllers.Application.kernelspecs()
+GET     /api/sessions               controllers.Application.getSessions
+GET     /api/contents/*path         controllers.Application.contents(path: String, type: String = null)
+GET     /api/contents/              controllers.Application.contents(path: String = null, type: String = null)
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
