@@ -3,6 +3,7 @@ package controllers
 import java.io.File
 import java.net.URLDecoder
 import javax.inject.Inject
+import javax.inject.Singleton
 
 import akka.actor.ActorSystem
 import akka.stream.Materializer
@@ -12,15 +13,20 @@ import play.api.libs.json.{JsArray, Json}
 import play.api.mvc.{Action, Controller}
 
 import scala.concurrent.ExecutionContext
+import scala.util.Try
 
 /**
  * main application controller
  */
-class Application @Inject()(configuration: Configuration)(implicit actorSystem: ActorSystem,
-  mat: Materializer,
-  ec: ExecutionContext) extends Controller {
+@Singleton
+class Application @Inject()(
+    conf: Configuration)(
+  implicit actorSystem: ActorSystem,
+    mat: Materializer,
+    ec: ExecutionContext) extends Controller {
 
-  private final val notebookHome = new File(configuration.getString("notebook.home").getOrElse("."))
+  private final val baseUrl = "/"
+  private final val notebookHome = new File(conf.getString("notebook.home").getOrElse("."))
 
   // kernelspecs is always same
   private final val kernelSpecs = Json.obj(
@@ -43,14 +49,16 @@ class Application @Inject()(configuration: Configuration)(implicit actorSystem: 
     )
   )
 
+  // serve /api/kernelspecs
   def kernelspecs() = Action { Ok(kernelSpecs) }
 
   // this shares the single kernel, so there's
   // no such thing as session
   def getSessions = Action { Ok(JsArray()) }
 
+  // serve /api/config
   def config(app: String) = Action {
-    val configValue = configuration.getObject(s"$app")
+    val configValue = conf.getObject(s"$app")
     Ok(configValue match {
       case Some(cfg) => Json.parse(
         cfg.render(ConfigRenderOptions.concise().setJson(true)))
@@ -58,7 +66,25 @@ class Application @Inject()(configuration: Configuration)(implicit actorSystem: 
     })
   }
 
-  // Home page that renders template
+  // serve /notebooks url
+  def notebook(path: String) = Action {
+    val file = toFile(path)
+    if (file.exists()) {
+      Ok(views.html.notebook(Map(
+        "base-url" -> baseUrl,
+        "notebook-path" -> notebookHome
+          .toPath
+          .normalize()
+          .relativize(file.toPath)
+          .toString,
+        "notebook-name" -> file.getName
+      )))
+    } else {
+      NotFound
+    }
+  }
+
+  // serve /tree url
   def tree(path: String) = Action { implicit request =>
     // prepare for breadcrumb
     val requestPath = toFile(path).toPath.normalize()
@@ -73,7 +99,9 @@ class Application @Inject()(configuration: Configuration)(implicit actorSystem: 
           (subpath.getName(i).toString, routes.Application.tree(subpath.toString).url)
         })
     }
-    Ok(views.html.tree(Option(path).getOrElse("/"), breadcrumbs))
+    Ok(views.html.tree(breadcrumbs, Map(
+      "base-url" -> baseUrl,
+      "notebook-path" -> Option(path).getOrElse("/"))))
   }
 
   def contents(path: String, contentType: String) = Action { request =>
@@ -86,7 +114,7 @@ class Application @Inject()(configuration: Configuration)(implicit actorSystem: 
           val relativePath = homePath.relativize(f.toPath)
           val contentType = f.getName match {
             case name: String if name.endsWith(".ipynb") => "notebook"
-            case name: String if f.isDirectory => "directory"
+            case _: String if f.isDirectory => "directory"
             case _ => "file"
           }
         Json.obj("type" -> contentType, "name" -> f.getName, "path" -> relativePath.toString)
@@ -95,6 +123,16 @@ class Application @Inject()(configuration: Configuration)(implicit actorSystem: 
     } else {
       Ok(Json.obj())
     }
+  }
+
+  def delete(path: String) = Action {
+    val file = toFile(path)
+    if (file.exists && file.isDirectory) {
+      Try { scala.reflect.io.Path(file).deleteRecursively() }
+    } else {
+      file.delete()
+    }
+    NoContent
   }
 
   private def toFile(path: String): File = {

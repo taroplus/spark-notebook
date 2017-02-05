@@ -1,6 +1,14 @@
-@(notebookPath: String, breadcrumbs: Seq[(String, String)])
-@page("notebook-tree", notebookPath) {
-
+@(breadcrumbs: Seq[(String, String)], bodydata: Map[String, String])
+@page("notebook-tree", bodydata) {
+<!--before_stylesheet  -->
+} {
+<!--after_stylesheet  -->
+} {
+<!--headercontainer  -->
+} {
+<!--header  -->
+} {
+<!--site  -->
 <div id="ipython-main-app" class="container">
   <div id="tab_content" class="tabbable">
     <div class="tab-content">
@@ -77,6 +85,8 @@
     </div><!-- class:tab-content -->
   </div><!-- id:tab_content -->
 </div><!-- ipython-main-app  -->
+} {
+<!--aftersite  -->
 } { <!-- script -->
 <script src="@routes.Assets.at("tree/js/main.min.js")" type="text/javascript" charset="utf-8"></script>
 }

@@ -1,9 +1,15 @@
 name := "spark-notebook"
 
-version := "0.1-SNAPSHOT"
+lazy val commonSettings = Seq(
+  organization := "taroplus",
+  version := "0.1-SNAPSHOT",
+  scalaVersion := "2.11.8"
+)
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
-
-scalaVersion := "2.11.8"
-
-libraryDependencies += "org.apache.spark" %% "spark-repl" % "2.1.0"
+lazy val server = (project in file(".")).enablePlugins(PlayScala)
+  .settings(commonSettings: _*)
+  .settings(
+    libraryDependencies ++= Seq(
+      "org.apache.spark" %% "spark-repl" % "2.1.0"
+    )
+  )
