@@ -101,7 +101,7 @@ class Application @Inject()(
     }
     Ok(views.html.tree(breadcrumbs, Map(
       "base-url" -> baseUrl,
-      "notebook-path" -> Option(path).getOrElse("/"))))
+      "notebook-path" -> Option(path).getOrElse(""))))
   }
 
   def contents(path: String, contentType: String) = Action { request =>

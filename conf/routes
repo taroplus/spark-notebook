@@ -10,8 +10,8 @@ GET     /notebooks/*path            controllers.Application.notebook(path: Strin
 GET     /api/config/*app            controllers.Application.config(app: String)
 GET     /api/kernelspecs            controllers.Application.kernelspecs()
 GET     /api/sessions               controllers.Application.getSessions
+GET     /api/contents               controllers.Application.contents(path: String = null, type: String = null)
 GET     /api/contents/*path         controllers.Application.contents(path: String, type: String = null)
-GET     /api/contents/              controllers.Application.contents(path: String = null, type: String = null)
 DELETE  /api/contents/*path         controllers.Application.delete(path:String)
 
 # Map static resources from the /public folder to the /assets URL path
