@@ -2,17 +2,14 @@ package controllers
 
 import java.io.File
 import java.net.URLDecoder
-import javax.inject.Inject
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
-import akka.actor.ActorSystem
-import akka.stream.Materializer
 import com.typesafe.config.ConfigRenderOptions
 import play.api.Configuration
 import play.api.libs.json.{JsArray, Json}
 import play.api.mvc.{Action, Controller}
+import taroplus.KernelAccess
 
-import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 /**
@@ -20,37 +17,14 @@ import scala.util.Try
  */
 @Singleton
 class Application @Inject()(
-    conf: Configuration)(
-  implicit actorSystem: ActorSystem,
-    mat: Materializer,
-    ec: ExecutionContext) extends Controller {
+    conf: Configuration,
+    kernel: KernelAccess) extends Controller {
 
   private final val baseUrl = "/"
   private final val notebookHome = new File(conf.getString("notebook.home").getOrElse("."))
 
-  // kernelspecs is always same
-  private final val kernelSpecs = Json.obj(
-    "default" -> "scala",
-    "kernelspecs" -> Json.obj(
-      "scala" -> Json.obj(
-        "name" -> "scala",
-        "spec" -> Json.obj(
-          "language" -> "scala",
-          "display_name" -> "Spark"
-        ),
-        "resources" -> Json.obj()),
-      "python" -> Json.obj(
-        "name" -> "python",
-        "spec" -> Json.obj(
-          "language" -> "python",
-          "display_name" -> "PySpark"
-        ),
-        "resources" -> Json.obj())
-    )
-  )
-
   // serve /api/kernelspecs
-  def kernelspecs() = Action { Ok(kernelSpecs) }
+  def kernelspecs() = Action { Ok(kernel.kernelSpecs) }
 
   // this shares the single kernel, so there's
   // no such thing as session
@@ -64,6 +38,16 @@ class Application @Inject()(
         cfg.render(ConfigRenderOptions.concise().setJson(true)))
       case None => Json.obj()
     })
+  }
+
+  // serve files under custom
+  def custom(file: String) = Action { request =>
+    val fileToServe = new File("./resources", file)
+    if (fileToServe.exists) {
+      Ok.sendFile(fileToServe, inline = true)
+    } else {
+      NotFound
+    }
   }
 
   // serve /notebooks url

@@ -15,4 +15,6 @@ GET     /api/contents/*path         controllers.Application.contents(path: Strin
 DELETE  /api/contents/*path         controllers.Application.delete(path:String)
 
 # Map static resources from the /public folder to the /assets URL path
+# handle custom files by the application
+GET     /assets/custom/*file        controllers.Application.custom(file: String)
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
