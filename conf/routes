@@ -9,10 +9,16 @@ GET     /notebooks/*path            controllers.Application.notebook(path: Strin
 
 GET     /api/config/*app            controllers.Application.config(app: String)
 GET     /api/kernelspecs            controllers.Application.kernelspecs()
-GET     /api/sessions               controllers.Application.getSessions
+
+# content management
 GET     /api/contents               controllers.Application.contents(path: String = null, type: String = null)
 GET     /api/contents/*path         controllers.Application.contents(path: String, type: String = null)
 DELETE  /api/contents/*path         controllers.Application.delete(path:String)
+PUT     /api/contents/*path         controllers.Application.save(path:String)
+
+# session management
+GET     /api/sessions               controllers.Application.getSessions
+POST    /api/sessions               controllers.Application.newSession
 
 # Map static resources from the /public folder to the /assets URL path
 # handle custom files by the application

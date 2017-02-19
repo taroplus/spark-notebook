@@ -1,12 +1,11 @@
-package taroplus
+package taroplus.kernel
 
 import akka.actor.{Actor, Props}
-import taroplus.kernel.{PythonKernel, ScalaKernel}
 
 /**
   * Interpreter representation - Akka Actor
   */
-class InterpreterActor extends Actor {
+class KernelActor extends Actor {
   private lazy val executor = context.actorOf(Props[SingleExecutor])
 
   private val scala = new ScalaKernel

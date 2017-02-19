@@ -1,7 +1,6 @@
-package taroplus
+package taroplus.kernel
 
-import javax.inject.Inject
-import javax.inject.Singleton
+import javax.inject.{Inject, Singleton}
 
 import akka.actor.{ActorSystem, PoisonPill, Props}
 import play.api.inject.ApplicationLifecycle
@@ -12,11 +11,12 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class KernelAccess @Inject()(lifecycle: ApplicationLifecycle)(
     implicit actorSystem: ActorSystem, ec: ExecutionContext){
-  private val interpreterActor = actorSystem.actorOf(Props(classOf[InterpreterActor]))
+
+  private val kernelActor = actorSystem.actorOf(Props(classOf[KernelActor]))
 
   // kill the actor before this getting shut down
   lifecycle.addStopHook(() => Future{
-    interpreterActor ! PoisonPill
+    kernelActor ! PoisonPill
   })
 
   final val kernelSpecs: JsValue = Json.obj(

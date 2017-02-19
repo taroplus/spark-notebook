@@ -2,13 +2,15 @@ package controllers
 
 import java.io.File
 import java.net.URLDecoder
+import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 import com.typesafe.config.ConfigRenderOptions
 import play.api.Configuration
-import play.api.libs.json.{JsArray, Json}
+import play.api.libs.json.{JsArray, JsObject, JsString, Json}
 import play.api.mvc.{Action, Controller}
-import taroplus.KernelAccess
+import taroplus.contents.Contents
+import taroplus.kernel.KernelAccess
 
 import scala.util.Try
 
@@ -22,6 +24,8 @@ class Application @Inject()(
 
   private final val baseUrl = "/"
   private final val notebookHome = new File(conf.getString("notebook.home").getOrElse("."))
+  // max notebook size
+  private final val maxLength = 10 * 1024 * 1024 // 10M
 
   // serve /api/kernelspecs
   def kernelspecs() = Action { Ok(kernel.kernelSpecs) }
@@ -29,6 +33,18 @@ class Application @Inject()(
   // this shares the single kernel, so there's
   // no such thing as session
   def getSessions = Action { Ok(JsArray()) }
+
+  // new session
+  def newSession = Action(parse.tolerantJson) { request =>
+    val json = request.body.as[JsObject] +
+      ("id" -> JsString(UUID.randomUUID().toString))
+
+    val kernel = (json \ "kernel").as[JsObject] +
+      ("id" -> JsString(UUID.randomUUID().toString))
+
+    // check if there's already a session for given path
+    Ok(json + ("kernel" -> kernel))
+  }
 
   // serve /api/config
   def config(app: String) = Action {
@@ -90,7 +106,9 @@ class Application @Inject()(
 
   def contents(path: String, contentType: String) = Action { request =>
     val file = toFile(path)
-    if (file.isDirectory) {
+    if (!file.exists()) {
+      NotFound
+    } else if (file.isDirectory) {
       val homePath = notebookHome.toPath.normalize()
       val files = file.listFiles
         .filter(!_.getName.startsWith("."))
@@ -105,7 +123,11 @@ class Application @Inject()(
       }
       Ok(Json.obj("content" -> files))
     } else {
-      Ok(Json.obj())
+      val includeContent = request.getQueryString("content") match {
+        case Some("0") => false
+        case _ => true
+      }
+      Ok(Contents.load(file, path, includeContent))
     }
   }
 
@@ -117,6 +139,12 @@ class Application @Inject()(
       file.delete()
     }
     NoContent
+  }
+
+  def save(path: String) = Action(parse.tolerantJson(maxLength)) { request =>
+    val file = toFile(path)
+    Contents.save(file, (request.body \ "content").as[JsObject])
+    Ok(Contents.load(file, path))
   }
 
   private def toFile(path: String): File = {
