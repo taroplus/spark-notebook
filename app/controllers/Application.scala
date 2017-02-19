@@ -5,13 +5,17 @@ import java.net.URLDecoder
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
+import akka.actor.{Actor, ActorSystem, Props}
+import akka.stream.Materializer
 import com.typesafe.config.ConfigRenderOptions
 import play.api.Configuration
-import play.api.libs.json.{JsArray, JsObject, JsString, Json}
-import play.api.mvc.{Action, Controller}
+import play.api.libs.json._
+import play.api.libs.streams.ActorFlow
+import play.api.mvc.{Action, Controller, WebSocket}
 import taroplus.contents.Contents
 import taroplus.kernel.KernelAccess
 
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 /**
@@ -20,7 +24,9 @@ import scala.util.Try
 @Singleton
 class Application @Inject()(
     conf: Configuration,
-    kernel: KernelAccess) extends Controller {
+    kernel: KernelAccess)(implicit actorSystem: ActorSystem,
+    mat: Materializer,
+    ec: ExecutionContext) extends Controller {
 
   private final val baseUrl = "/"
   private final val notebookHome = new File(conf.getString("notebook.home").getOrElse("."))
@@ -36,14 +42,27 @@ class Application @Inject()(
 
   // new session
   def newSession = Action(parse.tolerantJson) { request =>
-    val json = request.body.as[JsObject] +
-      ("id" -> JsString(UUID.randomUUID().toString))
+    val json = request.body.as[JsObject] + ("id" -> JsString(UUID.randomUUID().toString))
+    Ok(json + ("kernel" -> kernel.create((json \ "kernel").as[JsObject])))
+  }
 
-    val kernel = (json \ "kernel").as[JsObject] +
-      ("id" -> JsString(UUID.randomUUID().toString))
+  // send interrupt signal
+  def interrupt(kernelId: String) = Action {
+    kernel.interrupt()
+    NoContent
+  }
 
-    // check if there's already a session for given path
-    Ok(json + ("kernel" -> kernel))
+  // send interrupt signal
+  def restart(kernelId: String) = Action {
+    Ok(kernel.restart(kernelId))
+  }
+
+  // WebSocket connection
+  def connect(kernelId: String, sessionId: String) = WebSocket.accept[JsValue, JsValue] { _ =>
+    ActorFlow.actorRef(out => Props(
+      new Actor {
+        def receive: Receive = { case msg: JsObject => kernel.send(kernelId, msg)(out) }
+      }))
   }
 
   // serve /api/config

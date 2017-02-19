@@ -9,6 +9,11 @@ GET     /notebooks/*path            controllers.Application.notebook(path: Strin
 
 GET     /api/config/*app            controllers.Application.config(app: String)
 GET     /api/kernelspecs            controllers.Application.kernelspecs()
+POST    /api/kernels/:kernelId/interrupt          controllers.Application.interrupt(kernelId:String)
+POST    /api/kernels/:kernelId/restart            controllers.Application.restart(kernelId:String)
+GET     /api/kernels/:kernelId/channels           controllers.Application.connect(kernelId:String, session_id:String)
+
+
 
 # content management
 GET     /api/contents               controllers.Application.contents(path: String = null, type: String = null)
