@@ -1,6 +1,6 @@
 import com.typesafe.sbt.packager.MappingsHelper._
 
-name := "spark-notebook"
+name := "sparkling-notebook"
 
 lazy val commonSettings = Seq(
   organization := "taroplus",
