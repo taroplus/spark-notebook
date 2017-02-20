@@ -3,12 +3,15 @@ package taroplus.kernel
 import java.util.UUID
 
 import akka.actor.{Actor, Props}
+import org.slf4j.LoggerFactory
 import play.api.libs.json.{JsValue, Json}
+import taroplus.spark.SparkSystem
 
 /**
   * Interpreter representation - Akka Actor
   */
 class KernelActor extends Actor {
+  private val logger = LoggerFactory.getLogger(this.getClass)
   private lazy val executor = context.actorOf(Props[SingleExecutor])
 
   private val scala = new ScalaKernel
@@ -17,9 +20,11 @@ class KernelActor extends Actor {
   override def postStop(): Unit = {
     scala.stop()
     python.stop()
+    SparkSystem.stop()
   }
 
   override def preStart(): Unit = {
+    SparkSystem.start()
   }
 
   override def receive: Receive = {
@@ -28,22 +33,20 @@ class KernelActor extends Actor {
 
       (header \ "msg_type").as[String] match {
         case "kernel_info_request" =>
-          val content = (msg \ "kernel_name").as[String] match {
-            case "scala" => Json.obj(
-              "language_info" -> Json.obj(
-                "name" -> "scala",
-                "codemirror_mode" -> "text/x-scala"
-              ))
-            case "python" => Json.obj(
-              "language_info" -> Json.obj(
-                "name" -> "python",
-                "codemirror_mode" -> Json.obj("version" -> 2, "name" -> "ipython")
-              ))
-          }
-          sender ! reply_message(header, "kernel_info_reply", "shell", content)
+          sender ! reply_message(header,
+            "kernel_info_reply",
+            "shell",
+            getKernel(msg).info)
         case _ =>
-          println(msg)
+          logger.warn("Unknown message {}", msg)
       }
+  }
+
+  private def getKernel(msg: JsValue): Kernel = {
+    (msg \ "kernel_name").as[String] match {
+      case "scala" => scala
+      case "python" => python
+    }
   }
 
   private def reply_message(parent_header: JsValue,
