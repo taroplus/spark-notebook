@@ -1,7 +1,4 @@
 package taroplus.kernel
-import java.io.{ByteArrayOutputStream, OutputStream}
-import java.nio.charset.StandardCharsets
-
 import play.api.libs.json.{JsObject, Json}
 import taroplus.spark.SparkSystem
 import taroplus.utils.InterceptOutputStream
@@ -30,7 +27,7 @@ class ScalaKernel extends Kernel {
       original_code
     }
 
-    val result = Console.withOut(new InterceptOutputStream()) {
+    val result = Console.withOut(InterceptOutputStream.instance) {
       InterceptOutputStream.intercept(stream.append) {
         intp.interpret(code)
       }

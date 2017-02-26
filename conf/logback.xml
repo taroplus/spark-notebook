@@ -1,10 +1,4 @@
 <configuration>
-
-    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
-        <!-- reset all previous level configurations of all j.u.l. loggers -->
-        <resetJUL>true</resetJUL>
-    </contextListener>
-
     <conversionRule conversionWord="coloredLevel" converterClass="play.api.libs.logback.ColoredLevel"/>
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/application.log</file>
@@ -18,6 +12,11 @@
             <pattern>%coloredLevel %logger{15} - %message%n%xException{10}</pattern>
         </encoder>
     </appender>
+
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <!-- reset all previous level configurations of all j.u.l. loggers -->
+        <resetJUL>true</resetJUL>
+    </contextListener>
 
     <logger name="play" level="INFO"/>
 

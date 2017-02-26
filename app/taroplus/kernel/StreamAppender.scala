@@ -8,6 +8,12 @@ import play.api.libs.json.{JsValue, Json}
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.duration.Duration
 
+/**
+  * This class manages output stream coming from code
+  * @param ref ActorRef
+  * @param msg JsValue
+  * @param system ActorSystem
+  */
 class StreamAppender(ref: ActorRef, msg: JsValue, system: ActorSystem) {
   private val REGEX_STACKTRACE = "^.+Exception[^\\n]++\\n(\\s+at .++\\n)+".r
   private val REGEX_CONSOLE_LINE = "^\\s+at \\$iwC.+".r
@@ -49,6 +55,7 @@ class StreamAppender(ref: ActorRef, msg: JsValue, system: ActorSystem) {
     }
   }
 
+  // strips internal stack from output
   private def normalize(text: String): String = {
     REGEX_STACKTRACE.replaceAllIn(text, m => {
       val lines = m.group(0).split("\n")

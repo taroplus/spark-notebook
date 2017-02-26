@@ -123,7 +123,7 @@ object SparkSystem {
 
   // original implementation tries to access globalFuture which is null
   // in this use case, so overriding that function
-  class ProcessLineFixed extends SparkILoop(None, new JPrintWriter(new InterceptOutputStream(), true)) {
+  class ProcessLineFixed extends SparkILoop(None, new JPrintWriter(InterceptOutputStream.instance, true)) {
     override def processLine(line: String): Boolean = {
       command(line) match {
         case Result(false, _)      => false
