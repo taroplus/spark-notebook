@@ -103,7 +103,7 @@ class Application @Inject()(
     }
   }
 
-  // serve /tree url
+  // serve '/tree' url
   def tree(path: String) = Action { implicit request =>
     // prepare for breadcrumb
     val requestPath = toFile(path).toPath.normalize()

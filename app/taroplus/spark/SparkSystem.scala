@@ -7,6 +7,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.deploy.SparkSubmit
 import org.apache.spark.repl.{Main, SparkILoop}
 import org.slf4j.LoggerFactory
+import taroplus.utils.InterceptOutputStream
 
 import scala.collection.mutable.ArrayBuffer
 import scala.tools.nsc.Settings
@@ -25,11 +26,11 @@ object SparkSystem {
     * SparkSubmit class calls here
     */
   def main(args: Array[String]): Unit = {
-    val jars = getUserJars(Main.conf, isShell = true) ++ getSystemJars
+    val user_jars = getUserJars(Main.conf, isShell = true)
     val interpArguments = List(
       "-Yrepl-class-based",
       "-Yrepl-outdir", s"${Main.outputDir.getAbsolutePath}",
-      "-classpath", jars.mkString(File.pathSeparator)
+      "-classpath", (user_jars ++ getSystemJars).mkString(File.pathSeparator)
     )
 
     iloop.settings = new Settings()
@@ -55,8 +56,13 @@ object SparkSystem {
     iloop = new ProcessLineFixed()
     // back up current class loader
     backupClassLoader = Thread.currentThread().getContextClassLoader
-    // use SparkSubmit to setup spark specific things
-    SparkSubmit.main(Array("--class", "taroplus.spark.SparkSystem", "."))
+    // use SparkSubmit to setup spark specific things, use an empty jar
+    // as its target jar
+    getSystemJars.find(_.contains("submit-target.jar")) match {
+      case Some(path) => SparkSubmit.main(Array("--class", "taroplus.spark.SparkSystem", path))
+      case _ =>
+        logger.error("Unable to locate the dummy file: submit-target.jar")
+    }
   }
 
   /**
@@ -71,6 +77,10 @@ object SparkSystem {
     iloop.closeInterpreter()
     // restore current class loader
     Thread.currentThread().setContextClassLoader(backupClassLoader)
+  }
+
+  def interrupt(): Unit = {
+    Main.sparkContext.cancelAllJobs()
   }
 
   // Play's dev mode doesn't have explicit classpath, so this is extracting
@@ -113,7 +123,7 @@ object SparkSystem {
 
   // original implementation tries to access globalFuture which is null
   // in this use case, so overriding that function
-  class ProcessLineFixed extends SparkILoop(None, new JPrintWriter(Console.out, true)) {
+  class ProcessLineFixed extends SparkILoop(None, new JPrintWriter(new InterceptOutputStream(), true)) {
     override def processLine(line: String): Boolean = {
       command(line) match {
         case Result(false, _)      => false

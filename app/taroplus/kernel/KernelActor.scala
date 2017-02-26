@@ -1,10 +1,10 @@
 package taroplus.kernel
 
-import java.util.UUID
+import java.util.concurrent.ConcurrentLinkedQueue
 
-import akka.actor.{Actor, Props}
+import akka.actor.{Actor, ActorRef, Props}
 import org.slf4j.LoggerFactory
-import play.api.libs.json.{JsValue, Json}
+import play.api.libs.json.{JsObject, JsValue, Json}
 import taroplus.spark.SparkSystem
 
 /**
@@ -12,12 +12,19 @@ import taroplus.spark.SparkSystem
   */
 class KernelActor extends Actor {
   private val logger = LoggerFactory.getLogger(this.getClass)
-  private lazy val executor = context.actorOf(Props[SingleExecutor])
+  private lazy val executor = context.actorOf(Props(new SingleExecutor))
+
+  // the task queue
+  private val tasks = new ConcurrentLinkedQueue[(ActorRef, JsObject)]()
 
   private val scala = new ScalaKernel
   private val python = new PythonKernel
 
+  // execution counter
+  private var counter = 1
+
   override def postStop(): Unit = {
+    tasks.clear()
     scala.stop()
     python.stop()
     SparkSystem.stop()
@@ -28,15 +35,27 @@ class KernelActor extends Actor {
   }
 
   override def receive: Receive = {
-    case msg: JsValue =>
+    case msg: JsObject =>
       val header = (msg \ "header").as[JsValue]
+      logger.info("MSG: {}", header \ "msg_type")
 
       (header \ "msg_type").as[String] match {
+        case "reset" =>
+          SparkSystem.stop()
+          SparkSystem.start()
+
+        case "interrupt" =>
+          logger.info("Cancel All jobs and tasks")
+          tasks.clear()
+          SparkSystem.interrupt()
+
+        case "execute_request" =>
+          tasks.add((sender, msg))
+          executor ! POLL
+
         case "kernel_info_request" =>
-          sender ! reply_message(header,
-            "kernel_info_reply",
-            "shell",
-            getKernel(msg).info)
+          sender ! reply_message(msg, "kernel_info_reply", "shell", getKernel(msg).info)
+
         case _ =>
           logger.warn("Unknown message {}", msg)
       }
@@ -49,34 +68,35 @@ class KernelActor extends Actor {
     }
   }
 
-  private def reply_message(parent_header: JsValue,
-      msgType: String,
-      channel: String,
-      content: JsValue): JsValue = {
-
-    val msg_id = UUID.randomUUID().toString
-    Json.obj("parent_header" -> parent_header,
-      "msg_type" -> msgType,
-      "msg_id" -> msg_id,
-      "content" -> content,
-      "header" -> Json.obj(
-        "version" -> "5.0",
-        "msg_type" -> msgType,
-        "msg_id" -> msg_id
-      ),
-      "channel" -> channel
-    )
-  }
-
   class SingleExecutor extends Actor {
     var isRunning: Boolean = _
     def receive: Receive = {
       case POLL if !isRunning =>
         synchronized {
-          isRunning = true
-          // do something
-          isRunning = false
-          self ! POLL
+          if (!isRunning && !tasks.isEmpty) {
+            isRunning = true
+
+            // grab a task to run
+            val (ref, msg) = tasks.poll()
+            // status busy
+            ref ! reply_message(msg, "status", "iopub", Json.obj("execution_state" -> "busy"))
+
+            val appender = new StreamAppender(ref, msg, context.system)
+            // run the code
+            val reply_content = getKernel(msg).execute(appender, msg, counter)
+            appender.flush()
+
+            // execute reply
+            ref ! reply_message(msg, "execute_reply", "shell", reply_content)
+
+            // status idle
+            ref ! reply_message(msg, "status", "iopub", Json.obj("execution_state" -> "idle"))
+
+            // status idle
+            counter = counter + 1
+            isRunning = false
+            self ! POLL
+          }
         }
       case _ => ()
     }

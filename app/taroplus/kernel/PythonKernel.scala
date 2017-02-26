@@ -13,6 +13,7 @@ class PythonKernel extends Kernel {
       ))
   }
 
-  override def stop(): Unit = {
+  override def execute(stream: StreamAppender, msg: JsObject, counter: Int): JsObject = {
+    Json.obj("execution_count" -> counter)
   }
 }

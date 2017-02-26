@@ -4,5 +4,6 @@ import play.api.libs.json.JsObject
 
 trait Kernel {
   val info: JsObject
-  def stop(): Unit
+  def execute(stream: StreamAppender, msg: JsObject, counter: Int): JsObject
+  def stop(): Unit = {}
 }
