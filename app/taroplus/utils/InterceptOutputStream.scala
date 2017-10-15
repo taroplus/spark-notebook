@@ -1,6 +1,6 @@
 package taroplus.utils
 
-import java.io.{OutputStream, PrintWriter}
+import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 
 import scala.util.DynamicVariable

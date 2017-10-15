@@ -1,0 +1,169 @@
+/*
+  Dark theme for Jupyter Notebook/iPython 4
+  Author: Theodore Pak
+  Repo at: https://github.com/powerpak/jupyter-dark-theme
+  Inspired by and adapted from the following:
+  Base16 for iPython Notebook (https://github.com/nsonnad/base16-ipython-notebook)
+  Base16 Twilight Dark, David Hart (http://hart-dev.com)
+  CodeMirror template adapted for IPython Notebook by Nikhil Sonnad (https://github.com/nsonnad/base16-ipython-notebook)
+  CodeMirror template by Jan T. Scott (https://github.com/idleberg/base16-chrome-devtools)
+  Original Base16 color scheme by Chris Kempson (https://github.com/chriskempson/base16)
+*/
+@import url('https://fonts.googleapis.com/css?family=Roboto|Slabo+27px');
+
+@body-bg:               #222;
+@text-color:            #b7b7b7;
+@black:                 @text-color;
+@output_pre_color:      #979797;
+@font-family-monospace: Menlo, monospace;  // to allow user to customize their fonts
+@font-size-base:        13px;
+@notebook_font_size:    11px;
+@font-family-sans-serif: Roboto;
+
+@page-backdrop-color:   #111111;
+@global-shadow: none;
+@input_prompt_color: #9b703f;
+@output_prompt_color: #9b859d;
+@light_border_color: #464b50;
+@rendered_html_border_color: #979797
+@cell_background: #272822;
+@popover-bg: rgba(50, 50, 50, 0.95);
+@popover-title-bg: @popover-bg;
+@modal-content-bg: @popover-bg;
+@modal-header-border-color: #444;
+@modal-footer-border-color: #444;
+@popover-arrow-outer-color: #444;
+@alert-info-bg:               #373E42;
+@alert-info-text:             #d9edf7;
+
+@btn-default-color: #aaa;
+@btn-default-bg: #555;
+@btn-default-border: @body-bg;
+
+@btn-primary-color:              #eee;
+@btn-primary-bg:                 #4481b7;
+@btn-primary-border:             @body-bg;
+
+@dropdown-bg: rgba(50, 50, 50, 0.95);
+@dropdown-link-color: @text-color;
+@dropdown-divider-bg: #444;
+@dropdown-link-hover-color: #fff;
+@dropdown-link-hover-bg: #444;
+
+@navbar-default-link-active-color: #fff;
+@navbar-default-link-active-bg: #444;
+@navbar-default-link-color: @text-color;
+@navbar-default-link-hover-color: #fff;
+@dropdown-link-hover-bg: #444;
+@navbar-default-bg: transparent;
+
+@input-color: #eee;
+@input-bg: @body-bg;
+@input-border: #777;
+
+@table-border-color: #444;
+@dark_dashboard_color: #777;
+
+#notebook_list input[type="checkbox"] { opacity: 0.3; }
+#notebook_list input[type="checkbox"]:checked { opacity: 1; }
+
+.list_item:hover { background-color: #333; }
+
+.completions select {
+  color: @text-color;
+}
+
+#complete {
+  border-color: #444;
+  background: rgba(50, 50, 50, 0.95);
+  color: #b7b7b7;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Logo */
+#ipython_notebook a {
+  font-family: 'Slabo 27px', serif;
+  color: white;
+  text-decoration: none;
+  font-size: 1.2em;
+}
+
+div.input_prompt {
+  padding-top: 0.8em;
+}
+
+div.output_area, div.input_area {
+  padding: 5px
+}
+
+div.output_area pre {
+  line-height: 1.3em;
+}
+
+a { color: #CF4A4C; }
+a:hover, a:focus { color: #DE6F71; }
+
+.notebook_app div.output_stderr {background-color: #A0783C;}
+.notebook_app div.output_stderr pre {color: #eee;}
+
+.celltoolbar {
+  border-color: #444;
+  background: #444;
+  color: @text-color;
+}
+
+.ctb_global_show .ctb_show ~ div.text_cell_render {
+  border-color: #444;
+}
+.celltoolbar select {
+  opacity: 0.5;
+}
+
+/* Based on Sublime Text's Monokai theme */
+.CodeMirror {
+  color: @text-color;
+  font-family: @font-family-monospace;
+  font-size: 12px;
+  background: @cell_background;
+}
+
+.CodeMirror div.CodeMirror-selected { background: #49483E; }
+.CodeMirror .CodeMirror-line::selection, .CodeMirror .CodeMirror-line > span::selection, .CodeMirror .CodeMirror-line > span > span::selection { background: rgba(73, 72, 62, .99); }
+.CodeMirror .CodeMirror-line::-moz-selection, .CodeMirror .CodeMirror-line > span::-moz-selection, .CodeMirror .CodeMirror-line > span > span::-moz-selection { background: rgba(73, 72, 62, .99); }
+.CodeMirror .CodeMirror-gutters { background: @cell_background; border-right: 0px; }
+.CodeMirror .CodeMirror-guttermarker { color: white; }
+.CodeMirror .CodeMirror-guttermarker-subtle { color: #d0d0d0; }
+.CodeMirror .CodeMirror-linenumber { color: #d0d0d0; }
+.CodeMirror .CodeMirror-cursor { border-left: 1px solid #f8f8f0; }
+
+.CodeMirror span.cm-comment { color: #75715e; }
+.CodeMirror span.cm-atom { color: #ae81ff; }
+.CodeMirror span.cm-number { color: #ae81ff; }
+
+.CodeMirror span.cm-property, .CodeMirror span.cm-attribute { color: #a6e22e; }
+.CodeMirror span.cm-keyword { color: #f92672; }
+.CodeMirror span.cm-builtin { color: #66d9ef; }
+.CodeMirror span.cm-string { color: #e6db74; }
+
+.CodeMirror span.cm-variable { color: #f8f8f2; }
+.CodeMirror span.cm-variable-2 { color: #9effff; }
+.CodeMirror span.cm-variable-3 { color: #66d9ef; }
+.CodeMirror span.cm-def { color: #fd971f; }
+.CodeMirror span.cm-bracket { color: #f8f8f2; }
+.CodeMirror span.cm-tag { color: #f92672; }
+.CodeMirror span.cm-header { color: #ae81ff; }
+.CodeMirror span.cm-link { color: #ae81ff; }
+.CodeMirror span.cm-error { background: #f92672; color: #f8f8f0; }
+
+.CodeMirror .CodeMirror-activeline-background { background: #373831; }
+.CodeMirror .CodeMirror-matchingbracket {
+  text-decoration: underline;
+  color: white !important;
+}
+
+/*
+  Markdown editing
+*/
+.cm-s-default span.cm-header {color: #CF4A4C;}
+.cm-s-default span.cm-variable-2 {color: #7587A6;}
+.cm-s-default span.cm-comment {color: #7F7A80;}

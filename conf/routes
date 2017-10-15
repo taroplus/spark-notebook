@@ -13,13 +13,18 @@ POST    /api/kernels/:kernelId/interrupt          controllers.Application.interr
 POST    /api/kernels/:kernelId/restart            controllers.Application.restart(kernelId:String)
 GET     /api/kernels/:kernelId/channels           controllers.Application.connect(kernelId:String, session_id:String)
 
-
-
 # content management
+GET     /api/contents/*path/checkpoints         controllers.Application.checkpoints(path: String)
+POST    /api/contents/*path/checkpoints         controllers.Application.checkpoints(path: String)
 GET     /api/contents               controllers.Application.contents(path: String = null, type: String = null)
 GET     /api/contents/*path         controllers.Application.contents(path: String, type: String = null)
 DELETE  /api/contents/*path         controllers.Application.delete(path:String)
 PUT     /api/contents/*path         controllers.Application.save(path:String)
+POST    /api/contents               controllers.Application.create(path: String = null)
+POST    /api/contents/              controllers.Application.create(path: String = null)
+POST    /api/contents/*path         controllers.Application.create(path: String)
+PATCH   /api/contents/*path         controllers.Application.rename(path: String)
+
 
 # session management
 GET     /api/sessions               controllers.Application.getSessions

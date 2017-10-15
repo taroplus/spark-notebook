@@ -12,8 +12,10 @@ lazy val server = (project in file(".")).enablePlugins(PlayScala)
   .settings(commonSettings: _*)
   .settings(
     libraryDependencies ++= Seq(
-      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.7.8",
-      "org.apache.spark" %% "spark-repl" % "2.1.0"
+      "org.apache.spark" %% "spark-repl" % "2.2.0",
+      "org.apache.spark" %% "spark-streaming" % "2.2.0",
+      "com.thoughtworks.paranamer" % "paranamer" % "2.6",
+      "com.fasterxml.jackson.module" %% "jackson-module-scala" % "2.7.8"
     )
   )
 

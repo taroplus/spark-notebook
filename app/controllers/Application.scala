@@ -2,12 +2,14 @@ package controllers
 
 import java.io.File
 import java.net.URLDecoder
+import java.time.Instant
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.Materializer
 import com.typesafe.config.ConfigRenderOptions
+import org.apache.commons.io.FileUtils
 import play.api.Configuration
 import play.api.libs.json._
 import play.api.libs.streams.ActorFlow
@@ -67,7 +69,7 @@ class Application @Inject()(
 
   // serve /api/config
   def config(app: String) = Action {
-    val configValue = conf.getObject(s"$app")
+    val configValue = conf.getObject(s"config.$app")
     Ok(configValue match {
       case Some(cfg) => Json.parse(
         cfg.render(ConfigRenderOptions.concise().setJson(true)))
@@ -132,14 +134,14 @@ class Application @Inject()(
       val files = file.listFiles
         .filter(!_.getName.startsWith("."))
         .map { f =>
-          val relativePath = homePath.relativize(f.toPath)
-          val contentType = f.getName match {
-            case name: String if name.endsWith(".ipynb") => "notebook"
-            case _: String if f.isDirectory => "directory"
-            case _ => "file"
-          }
-        Json.obj("type" -> contentType, "name" -> f.getName, "path" -> relativePath.toString)
-      }
+            val relativePath = homePath.relativize(f.toPath)
+            val contentType = f.getName match {
+              case name: String if name.endsWith(".ipynb") => "notebook"
+              case _: String if f.isDirectory => "directory"
+              case _ => "file"
+            }
+          Json.obj("type" -> contentType, "name" -> f.getName, "path" -> relativePath.toString)
+        }
       Ok(Json.obj("content" -> files))
     } else {
       val includeContent = request.getQueryString("content") match {
@@ -164,6 +166,96 @@ class Application @Inject()(
     val file = toFile(path)
     Contents.save(file, (request.body \ "content").as[JsObject])
     Ok(Contents.load(file, path))
+  }
+
+  def checkpoints(path: String) = Action { request =>
+    val currentPath = toFile(path)
+    if (currentPath.exists()) {
+      request.method match {
+        case "POST" =>
+          Ok(Json.obj(
+            "last_modified" -> Instant.ofEpochMilli(currentPath.lastModified).toString,
+            "id" -> "checkpoint"))
+        case _ =>
+          Ok(Json.arr(
+            Json.obj(
+              "last_modified" -> Instant.ofEpochMilli(currentPath.lastModified).toString,
+              "id" -> "checkpoint")
+          ))
+      }
+    } else {
+      NotFound
+    }
+  }
+
+  def create(path: String) = Action(parse.tolerantJson) { request =>
+    val baseDir = toFile(path)
+
+    // type may be given, otherwise consider this is for a notebook
+    val contentType = (request.body \ "type").asOpt[String]
+      .getOrElse("notebook")
+
+    // base file name
+    val templateName = contentType match {
+      case "directory" => "Untitled Folder%s"
+      case "notebook" => "Untitled%s.ipynb"
+      case _ => "Untitled%s"
+    }
+
+    // find a name for new content
+    val targetPath = Stream.from(1).map {
+        case 1 => templateName.format("")
+        case i => templateName.format(" " + i.toString)
+      }
+      .map(new File(baseDir, _))
+      .find(!_.exists())
+      .head
+
+    val relativePath = notebookHome.toURI.relativize(targetPath.toURI).getPath
+    contentType match {
+      case "directory" =>
+        targetPath.mkdir()
+        Created(Json.obj("type" -> contentType, "name" -> targetPath.getName, "path" -> relativePath))
+      case "notebook" =>
+        (request.body \ "copy_from").asOpt[String] match {
+          case Some(s) =>
+            val copyFrom = new File(notebookHome, s)
+            FileUtils.copyFile(copyFrom, targetPath)
+          case None =>
+            // it has to set kernel
+            val content = Json.prettyPrint(
+              Json.obj(
+                "nbformat_minor" -> 0,
+                "nbformat" -> 4,
+                "cells" -> JsArray(),
+                "metadata" -> Json.obj()))
+            FileUtils.writeStringToFile(targetPath, content)
+        }
+        Redirect(routes.Application.contents(relativePath))
+      case _ =>
+        FileUtils.writeStringToFile(targetPath, "")
+        Redirect(routes.Application.contents(relativePath))
+    }
+  }
+
+  def rename(path: String) = Action(parse.tolerantJson) { request =>
+    val currentPath = toFile(path)
+    if (currentPath.exists()) {
+      val newPath = (request.body \ "path").as[String]
+      val newFile = toFile(newPath)
+      if (newFile.exists()) {
+        Conflict
+      } else {
+        val includeContent = request.getQueryString("content") match {
+          case Some("0") => false
+          case _ => !currentPath.isDirectory
+        }
+        currentPath.renameTo(newFile)
+        Ok(Contents.load(newFile, newPath, includeContent))
+      }
+    } else {
+      NotFound
+    }
   }
 
   private def toFile(path: String): File = {
