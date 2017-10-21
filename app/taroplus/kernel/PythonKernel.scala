@@ -3,6 +3,7 @@ import java.io.File
 import java.util.concurrent.TimeUnit
 
 import org.apache.spark.SparkContext
+import org.apache.spark.api.java.JavaSparkContext
 import org.apache.spark.repl.Main
 import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
@@ -19,8 +20,8 @@ class PythonKernel extends Kernel {
   private var gatewayServer: GatewayServer = _
   private var pendingRequest: PythonExecuteRequest = _
 
-  def sparkContext(): SparkContext = {
-    Main.sparkSession.sparkContext
+  def sparkContext(): JavaSparkContext = {
+    JavaSparkContext.fromSparkContext(Main.sparkContext)
   }
 
   def sparkSession(): SparkSession = {

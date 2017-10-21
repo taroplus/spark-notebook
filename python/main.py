@@ -4,7 +4,11 @@ import ast
 
 from time import sleep
 from py4j.java_gateway import java_import, JavaGateway, GatewayClient
-from py4j.protocol import Py4JNetworkError
+from py4j.protocol import Py4JError
+
+from pyspark import SparkConf
+from pyspark.context import SparkContext
+from pyspark.sql import SparkSession, SQLContext
 
 # Connect to the gateway
 gateway = JavaGateway(GatewayClient(port=int(sys.argv[1])), auto_convert=True)
@@ -42,15 +46,19 @@ class OutputForwarder:
     def reset(self):
         self.request = None
 
-    def write(self, message, truncate=True):
+    def write(self, message):
         if self.request is None:
             self._stdout.write(message)
         else:
-            info = (message[:500] + ' ...\n') if truncate and len(message) > 500 else message
-            self.request.write(info)
+            self.request.write(message)
 
 # capture stdout/stderr
 output = OutputForwarder()
+
+# Initialize spark variables
+jsc = python_kernel.sparkContext()
+sc = SparkContext(jsc = jsc, gateway = gateway, conf = SparkConf(_jvm = gateway.jvm, _jconf = jsc.getConf()))
+spark = SparkSession(sc, python_kernel.sparkSession())
 
 # main interpreter loop
 while True:
@@ -81,25 +89,23 @@ while True:
                 if isinstance(node, ast.Expr):
                     # need to modify it to Assign
                     name = "res%s" % var_counter
+                    var_counter += 1
                     new_node = (ast.Assign(targets=[ast.Name(id=name, ctx=ast.Store())], value=node.value))
                     parsed.body[i] = ast.fix_missing_locations(new_node)
                     variables.append(name)
-                elif isinstance(node, ast.Assign):
-                    # or if it's a simple assign like py = 0, keep the variable
-                    for target in node.targets:
-                        if isinstance(target, ast.Name):
-                            variables.append(target.id)
 
             eval(compile(parsed, "<string>", "exec"))
             for var in variables:
-                output.write("%s: %s\n" % (var, str(locals()[var])))
+                if locals()[var]:
+                    output.write("%s: %s\n" % (var, str(locals()[var])))
 
-    except Py4JNetworkError:
+    except Py4JError:
         # this means remote java process is dead, just quit
+        output.sysout(traceback.format_exc())
         break
     except:
         # errors should not be truncated
-        output.write(traceback.format_exc(), False)
+        output.write(traceback.format_exc())
 
     # always complete
     if request is not None:

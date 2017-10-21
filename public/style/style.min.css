@@ -9716,7 +9716,7 @@ div.input_area > div.highlight > pre {
 .CodeMirror {
   line-height: 1.21429em;
   /* Changed from 1em to our global default */
-  font-size: 11px;
+  font-size: 13px;
   height: auto;
   /* Changed to auto to autogrow */
   background: none;
@@ -10414,7 +10414,7 @@ div#notebook_panel {
   height: 100%;
 }
 div#notebook {
-  font-size: 11px;
+  font-size: 13px;
   line-height: 20px;
   overflow-y: hidden;
   overflow-x: auto;
@@ -11181,7 +11181,7 @@ fieldset[disabled] .notification_widget.danger.focus {
 }
 div#pager {
   background-color: #222;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 20px;
   overflow: hidden;
   display: none;
@@ -11584,7 +11584,7 @@ ul.typeahead-list > li > a {
 .terminal-app .terminal,
 .terminal-app .terminal dummy-screen {
   line-height: 1em;
-  font-size: 11px;
+  font-size: 13px;
 }
 .terminal-app .terminal .xterm-rows {
   padding: 10px;
