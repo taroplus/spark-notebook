@@ -64,6 +64,9 @@
 @table-border-color: #444;
 @dark_dashboard_color: #777;
 
+a { color: @text-color }
+a:hover, a:focus { color: #fff; }
+
 #notebook_list input[type="checkbox"] { opacity: 0.3; }
 #notebook_list input[type="checkbox"]:checked { opacity: 1; }
 
@@ -100,8 +103,7 @@ div.output_area pre {
   line-height: 1.3em;
 }
 
-a { color: #CF4A4C; }
-a:hover, a:focus { color: #DE6F71; }
+
 
 .notebook_app div.output_stderr {background-color: #A0783C;}
 .notebook_app div.output_stderr pre {color: #eee;}

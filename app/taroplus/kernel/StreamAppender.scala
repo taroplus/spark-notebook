@@ -32,7 +32,6 @@ class StreamAppender(ref: ActorRef, msg: JsValue, system: ActorSystem) {
       lines
     }
     val content = lines.reverse
-      .dropWhile(_ == "\n")
       .reverse
       .mkString
 

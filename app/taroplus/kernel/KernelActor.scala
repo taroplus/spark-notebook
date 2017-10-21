@@ -24,6 +24,7 @@ class KernelActor extends Actor {
   private var counter = 1
 
   override def postStop(): Unit = {
+    logger.info("Stopping KernelActor")
     tasks.clear()
     scala.stop()
     python.stop()
@@ -31,7 +32,10 @@ class KernelActor extends Actor {
   }
 
   override def preStart(): Unit = {
+    logger.info("Starting KernelActor")
     SparkSystem.start()
+    scala.start()
+    python.start()
   }
 
   override def receive: Receive = {
@@ -41,8 +45,12 @@ class KernelActor extends Actor {
 
       (header \ "msg_type").as[String] match {
         case "reset" =>
+          scala.stop()
+          python.stop()
           SparkSystem.stop()
           SparkSystem.start()
+          scala.start()
+          python.start()
 
         case "interrupt" =>
           logger.info("Cancel All jobs and tasks")

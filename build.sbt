@@ -19,4 +19,5 @@ lazy val server = (project in file(".")).enablePlugins(PlayScala)
     )
   )
 
+unmanagedClasspath in Runtime += file("/Users/konishio/workspace/spark-tools/target/classes")
 mappings in Universal ++= directory(baseDirectory.value / "resources")

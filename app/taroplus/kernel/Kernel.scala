@@ -9,6 +9,9 @@ trait Kernel {
   // returns kernel info
   val info: JsObject
 
+  // prepare for execution
+  def start(): Unit = {}
+
   // execute given code
   def execute(stream: StreamAppender, msg: JsObject, counter: Int): JsObject
 

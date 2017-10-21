@@ -11609,6 +11609,13 @@ ul.typeahead-list > li > a {
 */
 @rendered _html_border_color: #979797
 @cell_background: #272822;
+a {
+  color: #b7b7b7;
+}
+a:hover,
+a:focus {
+  color: #fff;
+}
 #notebook_list input[type="checkbox"] {
   opacity: 0.3;
 }
@@ -11643,13 +11650,6 @@ div.input_area {
 }
 div.output_area pre {
   line-height: 1.3em;
-}
-a {
-  color: #CF4A4C;
-}
-a:hover,
-a:focus {
-  color: #DE6F71;
 }
 .notebook_app div.output_stderr {
   background-color: #A0783C;
