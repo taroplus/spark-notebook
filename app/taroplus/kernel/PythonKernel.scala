@@ -1,8 +1,6 @@
 package taroplus.kernel
 import java.io.File
-import java.util.concurrent.TimeUnit
 
-import org.apache.spark.SparkContext
 import org.apache.spark.api.java.JavaSparkContext
 import org.apache.spark.repl.Main
 import org.apache.spark.sql.SparkSession
@@ -99,6 +97,7 @@ class PythonKernel extends Kernel {
 
       val env = builder.environment()
       env.put("PYTHONPATH", (sys.env.get("PYTHONPATH").toSeq ++ python_libs).mkString(File.pathSeparator))
+      env.put("MPLBACKEND", "module://mpl")
       env.put("SPARK_HOME", spark_home)
 
       builder.inheritIO()

@@ -11642,7 +11642,7 @@ a:focus {
   font-size: 1.2em;
 }
 div.input_prompt {
-  padding-top: 0.8em;
+  padding-top: 9px;
 }
 div.output_area,
 div.input_area {
@@ -11650,6 +11650,9 @@ div.input_area {
 }
 div.output_area pre {
   line-height: 1.3em;
+}
+div.output_svg > div {
+  max-width: 100%;
 }
 .notebook_app div.output_stderr {
   background-color: #A0783C;

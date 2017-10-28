@@ -16,6 +16,9 @@ class PythonExecuteRequest(_code: String, stream: StreamAppender) {
     }
   }
 
+  // forward
+  def svg(svg: String): Unit = stream.svg(svg)
+
   def write(message: String): Unit = {
     if (message != null && message.nonEmpty) {
       stream.append(message)

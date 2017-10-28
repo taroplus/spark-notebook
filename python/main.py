@@ -55,6 +55,15 @@ class OutputForwarder:
 # capture stdout/stderr
 output = OutputForwarder()
 
+try:
+    import matplotlib
+    from mpl import flush_figures
+    mpl = True
+except Exception:
+    output.sysout("Failed to load matplotlib")
+    output.sysout(traceback.format_exc())
+    mpl = False
+
 # Initialize spark variables
 jsc = python_kernel.sparkContext()
 sc = SparkContext(jsc = jsc, gateway = gateway, conf = SparkConf(_jvm = gateway.jvm, _jconf = jsc.getConf()))
@@ -96,9 +105,13 @@ while True:
 
             eval(compile(parsed, "<string>", "exec"))
             for var in variables:
-                if locals()[var]:
-                    output.write("%s: %s\n" % (var, str(locals()[var])))
+                val = locals()[var]
+                from pprint import pprint
+                if "DataFrame" in type(val).__name__ or val is not None:
+                    pprint(val)
 
+            if mpl:
+                flush_figures(request)
     except Py4JError:
         # this means remote java process is dead, just quit
         output.sysout(traceback.format_exc())

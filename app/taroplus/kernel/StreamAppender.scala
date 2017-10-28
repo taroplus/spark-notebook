@@ -31,12 +31,22 @@ class StreamAppender(ref: ActorRef, msg: JsValue, system: ActorSystem) {
       buffer.clear()
       lines
     }
-    val content = lines.reverse
-      .reverse
-      .mkString
+    // send to the client only when there's a line
+    if (lines.nonEmpty) {
+      val content = lines.reverse
+        .reverse
+        .mkString
 
-    ref ! reply_message(msg, "stream", "iopub",
-      Json.obj("text" -> content, "name" -> "stdout"))
+      ref ! reply_message(msg, "stream", "iopub",
+        Json.obj("text" -> content, "name" -> "stdout"))
+    }
+  }
+
+  def svg(svg: String): Unit = {
+    // send out buffer first
+    flush()
+    ref ! reply_message(msg, "display_data", "iopub",
+      Json.obj("data" -> Json.obj("image/svg+xml" -> svg.replace("\n", ""))))
   }
 
   def append(output: String): Unit = {
@@ -49,6 +59,7 @@ class StreamAppender(ref: ActorRef, msg: JsValue, system: ActorSystem) {
     if (currentTimer == null) {
       flush()
     }
+    // schedule next flush
     currentTimer = system.scheduler.scheduleOnce(Duration(200, TimeUnit.MILLISECONDS)) {
       flush()
     }

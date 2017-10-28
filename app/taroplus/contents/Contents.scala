@@ -51,8 +51,7 @@ object Contents {
 
       Files.write(
         file.toPath,
-        Json.stringify(jsonToSave).getBytes(StandardCharsets.UTF_8))
-
+        Json.prettyPrint(jsonToSave).getBytes(StandardCharsets.UTF_8))
     } else {
       // todo
     }
