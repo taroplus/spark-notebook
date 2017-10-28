@@ -414,7 +414,7 @@ div.cell.selected.jupyter-soft-selected {
   /* This padding is tuned to match the padding on the CodeMirror editor. */
   padding: 0.4em;
   margin: 0px;
-  font-family: Menlo, monospace;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
   text-align: right;
   /* This has to match that of the the CodeMirror class line-height below */
   line-height: 1.21429em;
@@ -460,7 +460,7 @@ div.inner_cell {
 div.input_area {
   border: 1px solid #464b50;
   border-radius: 2px;
-  background: #1a1a1a;
+  background: #272822;
   line-height: 1.21429em;
 }
 /* This is needed so that empty prompt areas can collapse to zero height when there
@@ -493,7 +493,7 @@ div.unrecognized_cell .inner_cell {
   font-weight: bold;
   color: red;
   border: 1px solid #464b50;
-  background: #0d0d0d;
+  background: #1a1a16;
 }
 div.unrecognized_cell .inner_cell a {
   color: inherit;
@@ -620,16 +620,16 @@ Adapted from GitHub theme
 
 */
 .highlight-base {
-  color: #000;
+  color: #b7b7b7;
 }
 .highlight-variable {
-  color: #000;
+  color: #b7b7b7;
 }
 .highlight-variable-2 {
-  color: #1a1a1a;
+  color: #d1d1d1;
 }
 .highlight-variable-3 {
-  color: #333333;
+  color: #eaeaea;
 }
 .highlight-string {
   color: #BA2121;
@@ -704,17 +704,17 @@ Adapted from GitHub theme
   color: #00f;
 }
 .cm-s-ipython span.cm-variable {
-  color: #000;
+  color: #b7b7b7;
 }
 .cm-s-ipython span.cm-operator {
   color: #AA22FF;
   font-weight: bold;
 }
 .cm-s-ipython span.cm-variable-2 {
-  color: #1a1a1a;
+  color: #d1d1d1;
 }
 .cm-s-ipython span.cm-variable-3 {
-  color: #333333;
+  color: #eaeaea;
 }
 .cm-s-ipython span.cm-comment {
   color: #408080;
@@ -959,7 +959,7 @@ pre.raw_input_prompt {
   /* nothing needed here. */
 }
 input.raw_input {
-  font-family: Menlo, monospace;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
   font-size: inherit;
   color: inherit;
   width: auto;
@@ -1265,8 +1265,6 @@ h6:hover .anchor-link {
   CodeMirror template by Jan T. Scott (https://github.com/idleberg/base16-chrome-devtools)
   Original Base16 color scheme by Chris Kempson (https://github.com/chriskempson/base16)
 */
-@rendered _html_border_color: #979797
-@cell_background: #272822;
 a {
   color: #b7b7b7;
 }
@@ -1335,15 +1333,16 @@ div.output_svg > div {
 .rendered_html h4,
 .rendered_html h5,
 .rendered_html h6 {
-  color: white;
+  color: #f0f0f0;
   font-weight: 600;
 }
 /* Based on Sublime Text's Monokai theme */
 .CodeMirror {
   color: #b7b7b7;
-  font-family: Menlo, monospace;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
   font-size: 12px;
-  background: #1a1a1a;
+  background: #272822;
+  line-height: 16px;
 }
 .CodeMirror div.CodeMirror-selected {
   background: #49483E;
@@ -1359,7 +1358,7 @@ div.output_svg > div {
   background: rgba(73, 72, 62, 0.99);
 }
 .CodeMirror .CodeMirror-gutters {
-  background: #1a1a1a;
+  background: #272822;
   border-right: 0px;
 }
 .CodeMirror .CodeMirror-guttermarker {
@@ -1430,32 +1429,5 @@ div.output_svg > div {
 .CodeMirror .CodeMirror-matchingbracket {
   text-decoration: underline;
   color: white !important;
-}
-/*
-  Markdown editing
-*/
-.cm-s-default span.cm-header {
-  color: #CF4A4C;
-}
-.cm-s-ipython span.cm-header {
-  color: #CF4A4C;
-}
-.cm-s-default span.cm-variable {
-  color: #7587A6;
-}
-.cm-s-ipython span.cm-variable {
-  color: #7587A6;
-}
-.cm-s-default span.cm-variable-2 {
-  color: #7587A6;
-}
-.cm-s-ipython span.cm-variable-2 {
-  color: #7587A6;
-}
-.cm-s-default span.cm-comment {
-  color: #7F7A80;
-}
-.cm-s-ipython span.cm-comment {
-  color: #7F7A80;
 }
 /*# sourceMappingURL=ipython.min.css.map */

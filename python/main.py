@@ -95,8 +95,9 @@ while True:
         if code:
             parsed = ast.parse(code)
             for i, node in enumerate(parsed.body):
-                if isinstance(node, ast.Expr):
-                    # need to modify it to Assign
+                # do this auto variable only for pure expressions
+                # which is not a function call
+                if isinstance(node, ast.Expr) and not isinstance(node.value, ast.Call):
                     name = "res%s" % var_counter
                     var_counter += 1
                     new_node = (ast.Assign(targets=[ast.Name(id=name, ctx=ast.Store())], value=node.value))
@@ -109,16 +110,15 @@ while True:
                 from pprint import pprint
                 if "DataFrame" in type(val).__name__ or val is not None:
                     pprint(val)
-
-            if mpl:
-                flush_figures(request)
     except Py4JError:
         # this means remote java process is dead, just quit
-        output.sysout(traceback.format_exc())
         break
     except:
         # errors should not be truncated
         output.write(traceback.format_exc())
+    finally:
+        # flush pending figures
+        if mpl: flush_figures(request)
 
     # always complete
     if request is not None:

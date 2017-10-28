@@ -18,14 +18,14 @@
 
 @font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 @font-family-serif: 'Georgia', serif;
-@font-family-monospace: Menlo, monospace;  // to allow user to customize their fonts
+@font-family-monospace:  "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;  // to allow user to customize their fonts
 
 @page-backdrop-color:   #111111;
 @global-shadow: none;
 @input_prompt_color: #9b703f;
 @output_prompt_color: #9b859d;
 @light_border_color: #464b50;
-@rendered_html_border_color: #979797
+@rendered_html_border_color: #979797;
 @cell_background: #272822;
 @popover-bg: rgba(50, 50, 50, 0.95);
 @popover-title-bg: @popover-bg;
@@ -64,6 +64,7 @@
 @table-border-color: #444;
 @dark_dashboard_color: #777;
 @rendered_html_border_color: white;
+@highlight-base: @text-color;
 
 a { color: @text-color }
 a:hover, a:focus { color: #fff; }
@@ -127,7 +128,7 @@ div.output_svg > div {
 
 .rendered_html {
   h1,h2,h3,h4,h5,h6 {
-    color: white;
+    color: #f0f0f0;
     font-weight: 600;
   }
 }
@@ -138,6 +139,7 @@ div.output_svg > div {
   font-family: @font-family-monospace;
   font-size: 12px;
   background: @cell_background;
+  line-height:16px;
 }
 
 .CodeMirror div.CodeMirror-selected { background: #49483E; }
@@ -174,14 +176,3 @@ div.output_svg > div {
   color: white !important;
 }
 
-/*
-  Markdown editing
-*/
-.cm-s-default span.cm-header {color: #CF4A4C;}
-.cm-s-ipython span.cm-header {color: #CF4A4C;}
-.cm-s-default span.cm-variable {color: #7587A6;}
-.cm-s-ipython span.cm-variable {color: #7587A6;}
-.cm-s-default span.cm-variable-2 {color: #7587A6;}
-.cm-s-ipython span.cm-variable-2 {color: #7587A6;}
-.cm-s-default span.cm-comment {color: #7F7A80;}
-.cm-s-ipython span.cm-comment {color: #7F7A80;}

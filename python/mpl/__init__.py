@@ -9,7 +9,7 @@ from matplotlib.backend_bases import _Backend
 __overrides = {
     'interactive': True,
     'figure.figsize': [6.0, 4.0],
-    'font.sans-serif': ['Helvetica', 'Verdana', 'sans-serif'],
+    'font.sans-serif': ['Helvetica', 'Arial', 'sans-serif'],
     'savefig.bbox': 'tight',
     'savefig.dpi': 72,
     # copied from ggplot style
@@ -19,8 +19,7 @@ __overrides = {
     'patch.antialiased': True,
     'font.size': 9,
     'axes.facecolor': 'E5E5E5',
-    'axes.edgecolor': 'white',
-    'axes.linewidth': 1,
+    'axes.linewidth': 0,
     'axes.grid': True,
     'axes.titlesize': 'x-large',
     'axes.labelsize': 'large',
@@ -33,7 +32,8 @@ __overrides = {
     'grid.color': 'white',
     'grid.linestyle': '-',
     'savefig.facecolor': 'F0F0F0',
-    'savefig.edgecolor': '0.50'
+    'savefig.edgecolor': '0.50',
+    'legend.facecolor': 'F0F0F0'
 }
 
 for k,v in __overrides.items():
