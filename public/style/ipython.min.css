@@ -1232,7 +1232,7 @@ h6:hover .anchor-link {
 .cm-header-5,
 .cm-header-6 {
   font-weight: bold;
-  font-family: 'Arial', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
 }
 .cm-header-1 {
   font-size: 185.7%;
@@ -1335,9 +1335,8 @@ div.output_svg > div {
 .rendered_html h4,
 .rendered_html h5,
 .rendered_html h6 {
-  font-family: 'Georgia', serif;
   color: white;
-  font-weight: 400;
+  font-weight: 600;
 }
 /* Based on Sublime Text's Monokai theme */
 .CodeMirror {

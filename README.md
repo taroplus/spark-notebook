@@ -2,13 +2,13 @@
 Yet another notebook application which is designed to work with Apache Spark. Sparkling-Notebook is basically a clone of Jupyter with slight behavior difference. Supported languages are only Scara and Python.
 
 ## Why creating another Notebook ?
-There are already good notebook soluations for Apache Spark, for example, [Apache Zeppelin](https://zeppelin.apache.org) is a very popular one, it has a lot of features and its community is very acitive. However I feel it's a little bit heavy weight and I tend to go with spark-shell which is not user friendly.
+There are already good notebook solutions for Apache Spark, for example, [Apache Zeppelin](https://zeppelin.apache.org) is a very popular one, it has a lot of features and its community is very active. However I feel it's a little bit heavy weight and I tend to go with spark-shell which is not user friendly.
 
-For those people who use Jupyter may want to consider [Apache Toree](https://toree.apache.org/) which works inside Jupyer and brings in the support for Spark. However due to Jupyter's kernel behavior, it tries to create a Spark context in each notebook and that causes several problems such as memory pressure and high latency for load time.
+For those people who use Jupyter may want to consider [Apache Toree](https://toree.apache.org/) which works inside Jupyter and brings in the support for Spark. However due to Jupyter's kernel behavior, it tries to create a Spark context in each notebook and that causes several problems such as memory pressure and high latency for load time.
 
 There's another one I tried which is [Spark Notebook](http://spark-notebook.io/), it's a lightweight solution and it comes with lots of third party libraries such as d3 and bokeh. However I couldn't figure out how to use those but it does not support Python.
 
-The appoach Spark Notebook did is quite interesting, it's actually came from [Scala Notebook](https://github.com/Bridgewater/scala-notebook) which is basically a ipython close. It uses all of good javascript which ipython has and replaced the serverside with Play Framework. So I did the same, I created a server which works with Jupyter's javascript and it does what exectly I want it to do.
+The approach Spark Notebook did is quite interesting, it's actually came from [Scala Notebook](https://github.com/Bridgewater/scala-notebook) which is basically a iPython clone. It uses all of good javascript which iPython has and replaced the server side with Play Framework. So I did the same, I created a server which works with Jupyter's javascript and it does what exactly I want it to do.
 
 ## Features
  * **Jupyter's Javascript**, Sparkling-Notebook uses the exact same javascript as Jupyter, so user experience is almost same, you can use jupyter's keyboard shortcuts !
