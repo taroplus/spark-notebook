@@ -9,7 +9,6 @@
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 /*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
-@import url('https://fonts.googleapis.com/css?family=Roboto|Slabo+27px');
 html {
   font-family: sans-serif;
   -ms-text-size-adjust: 100%;
@@ -1077,7 +1076,7 @@ html {
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 body {
-  font-family: Roboto;
+  font-family: 'Arial', sans-serif;
   font-size: 13px;
   line-height: 1.42857143;
   color: #b7b7b7;
@@ -5968,7 +5967,7 @@ button.close {
   position: absolute;
   z-index: 1070;
   display: block;
-  font-family: Roboto;
+  font-family: 'Arial', sans-serif;
   font-style: normal;
   font-weight: normal;
   letter-spacing: normal;
@@ -6086,7 +6085,7 @@ button.close {
   display: none;
   max-width: 276px;
   padding: 1px;
-  font-family: Roboto;
+  font-family: 'Arial', sans-serif;
   font-style: normal;
   font-weight: normal;
   letter-spacing: normal;
@@ -10238,8 +10237,8 @@ div.output_unrecognized a:hover {
   margin-top: 1em;
 }
 .rendered_html hr {
-  color: black;
-  background-color: black;
+  color: white;
+  background-color: white;
 }
 .rendered_html pre {
   margin: 1em 2em;
@@ -10258,13 +10257,13 @@ div.output_unrecognized a:hover {
 .rendered_html table {
   margin-left: auto;
   margin-right: auto;
-  border: 1px solid black;
+  border: 1px solid white;
   border-collapse: collapse;
 }
 .rendered_html tr,
 .rendered_html th,
 .rendered_html td {
-  border: 1px solid black;
+  border: 1px solid white;
   border-collapse: collapse;
   margin: 1em 2em;
 }
@@ -10366,7 +10365,7 @@ h6:hover .anchor-link {
 .cm-header-5,
 .cm-header-6 {
   font-weight: bold;
-  font-family: Roboto;
+  font-family: 'Arial', sans-serif;
 }
 .cm-header-1 {
   font-size: 185.7%;
@@ -11562,40 +11561,6 @@ ul.typeahead-list > li > a {
 #find-and-replace #replace-preview pre {
   padding: 5px 10px;
 }
-.terminal-app {
-  background: #111111;
-}
-.terminal-app #header {
-  background: #222;
-  -webkit-box-shadow: none;
-  box-shadow: none;
-}
-.terminal-app .terminal {
-  width: 100%;
-  float: left;
-  font-family: monospace;
-  color: white;
-  background: black;
-  padding: 0.4em;
-  border-radius: 2px;
-  -webkit-box-shadow: 0px 0px 12px 1px rgba(87, 87, 87, 0.4);
-  box-shadow: 0px 0px 12px 1px rgba(87, 87, 87, 0.4);
-}
-.terminal-app .terminal,
-.terminal-app .terminal dummy-screen {
-  line-height: 1em;
-  font-size: 13px;
-}
-.terminal-app .terminal .xterm-rows {
-  padding: 10px;
-}
-.terminal-app .terminal-cursor {
-  color: black;
-  background: white;
-}
-.terminal-app #terminado-container {
-  margin-top: 20px;
-}
 /*
   Dark theme for Jupyter Notebook/iPython 4
   Author: Theodore Pak
@@ -11636,7 +11601,7 @@ a:focus {
 }
 /* Logo */
 #ipython_notebook a {
-  font-family: 'Slabo 27px', serif;
+  font-family: 'Georgia', serif;
   color: white;
   text-decoration: none;
   font-size: 1.2em;
@@ -11670,6 +11635,16 @@ div.output_svg > div {
 }
 .celltoolbar select {
   opacity: 0.5;
+}
+.rendered_html h1,
+.rendered_html h2,
+.rendered_html h3,
+.rendered_html h4,
+.rendered_html h5,
+.rendered_html h6 {
+  font-family: 'Georgia', serif;
+  color: white;
+  font-weight: 400;
 }
 /* Based on Sublime Text's Monokai theme */
 .CodeMirror {
@@ -11770,10 +11745,25 @@ div.output_svg > div {
 .cm-s-default span.cm-header {
   color: #CF4A4C;
 }
+.cm-s-ipython span.cm-header {
+  color: #CF4A4C;
+}
+.cm-s-default span.cm-variable {
+  color: #7587A6;
+}
+.cm-s-ipython span.cm-variable {
+  color: #7587A6;
+}
 .cm-s-default span.cm-variable-2 {
   color: #7587A6;
 }
+.cm-s-ipython span.cm-variable-2 {
+  color: #7587A6;
+}
 .cm-s-default span.cm-comment {
+  color: #7F7A80;
+}
+.cm-s-ipython span.cm-comment {
   color: #7F7A80;
 }
 /*# sourceMappingURL=style.min.css.map */

@@ -31,7 +31,8 @@ class Application @Inject()(
     ec: ExecutionContext) extends Controller {
 
   private final val baseUrl = "/"
-  private final val notebookHome = new File(conf.getString("notebook.home").getOrElse("."))
+  // default notebook home = notebook folder
+  private final val notebookHome = new File(conf.getString("notebook.home").getOrElse("notebooks"))
   // max notebook size
   private final val maxLength = 10 * 1024 * 1024 // 10M
 

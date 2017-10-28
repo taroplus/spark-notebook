@@ -1,24 +1,43 @@
 # Sparkling-Notebook
-Another notebook application for spark
+Yet another notebook application which is designed to work with Apache Spark. Sparkling-Notebook is basically a clone of Jupyter with slight behavior difference. Supported languages are only Scara and Python.
 
-## Why creating another notebook ?
- * I've been using Jupyter's Spark Kernel, however, it creates JVM and SparkContext for every single notebook, I wasn't happy with it.
- * I tried another Notebook solution which has so many features, I didn't like it. I like Jupyter's user experience more than such complicated app.
- * I wanted to have a simple, stable and portable notebook app.
+## Why creating another Notebook ?
+There are already good notebook soluations for Apache Spark, for example, [Apache Zeppelin](https://zeppelin.apache.org) is a very popular one, it has a lot of features and its community is very acitive. However I feel it's a little bit heavy weight and I tend to go with spark-shell which is not user friendly.
 
-## What is this actually?
- * It's a scala version of Jupyter server that comes with Jupyter's javascript. So that it provides the exact same user experience as Jupyter does, but it handles Spark natively.
- * This keeps notebooks' format exactly same as Jupyter's one, so you can always go back to Jupyter.
- * No modification to the Jupyter's javascript except for CSS tweak, if you know how to use Jupyter, you can deal with this quickly.
+For those people who use Jupyter may want to consider [Apache Toree](https://toree.apache.org/) which works inside Jupyer and brings in the support for Spark. However due to Jupyter's kernel behavior, it tries to create a Spark context in each notebook and that causes several problems such as memory pressure and high latency for load time.
 
-## What it isn't.
-* This doesn't aim to support multi user and shared service kind of usage, this is more like a web version of spark-shell.
-* No intention to support other launguages, it does Scala and Python only.
-* I do think if it would be nice if there's a visualization library for scala, but you should try matplotlib (python) first.
+There's another one I tried which is [Spark Notebook](http://spark-notebook.io/), it's a lightweight solution and it comes with lots of third party libraries such as d3 and bokeh. However I couldn't figure out how to use those but it does not support Python.
 
-## How it works ?
-* If you don't know how to use Jupyter, then please go Jupyter's documentation page.
-* The server holds a single SparkContext and configuration can be done in spark-default.conf
+The appoach Spark Notebook did is quite interesting, it's actually came from [Scala Notebook](https://github.com/Bridgewater/scala-notebook) which is basically a ipython close. It uses all of good javascript which ipython has and replaced the serverside with Play Framework. So I did the same, I created a server which works with Jupyter's javascript and it does what exectly I want it to do.
 
-## Does this work ?
-* No, as of 2/18
+## Features
+ * **Jupyter's Javascript**, Sparkling-Notebook uses the exact same javascript as Jupyter, so user experience is almost same, you can use jupyter's keyboard shortcuts !
+
+ * **Single Spark Context**, single JVM and single Python. Notebooks share the same kernel so notebooks DO share sparkContext and variables.
+
+ * **Dark themed**, Jupyter's default theme is too bright and bad for your eyes at night.
+
+ * **Very lightweight**, As of now (10/28/2017), I have only 12 scala files to do this, this can't be heavy weight. I love this open source age.
+
+ * **Python Supported**, yes I do python occasionally and of course, matplotlib inline chart is supported.
+
+## How to Try
+If you have sbt, this should work
+
+```
+git clone https://github.com/taroplus/sparkling-notebook.git
+cd sparkling-notebook
+export SPARK_HOME=/some/spark/home
+sbt run
+```
+then hit http://localhost:9000
+
+## Screenshots
+![](./resources/spark.png)
+![](./resources/matplotlib.png)
+![](./resources/markdown.png)
+
+## What is coming ..
+ * Spark Streaming support
+ * Code completion
+ * Spark progress bar
