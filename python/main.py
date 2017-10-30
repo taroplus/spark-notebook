@@ -57,7 +57,7 @@ output = OutputForwarder()
 
 try:
     import matplotlib
-    from mpl import flush_figures
+    from mpl import flush_figures, clear_figures
     mpl = True
 except Exception:
     output.sysout("Failed to load matplotlib")
@@ -110,6 +110,8 @@ while True:
                 from pprint import pprint
                 if "DataFrame" in type(val).__name__ or val is not None:
                     pprint(val)
+
+            if mpl: flush_figures(request)
     except Py4JError:
         # this means remote java process is dead, just quit
         break
@@ -117,8 +119,8 @@ while True:
         # errors should not be truncated
         output.write(traceback.format_exc())
     finally:
-        # flush pending figures
-        if mpl: flush_figures(request)
+        # clear all pending figures
+        if mpl: clear_figures()
 
     # always complete
     if request is not None:

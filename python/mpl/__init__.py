@@ -41,22 +41,23 @@ for k,v in __overrides.items():
 
 tracking_managers = []
 
+
+def clear_figures():
+    del tracking_managers[:]
+    if hasattr(matplotlib, 'pyplot'):
+        matplotlib.pyplot.close('all')
+
+
 def flush_figures(request):
     # for some reason this has to be done here.
     matplotlib.rcParams['svg.fonttype'] = 'none'
-
-    try:
-        from io import BytesIO
-        for manager in tracking_managers:
-            fig = manager.canvas.figure
-            if fig.axes or fig.lines:
-                bytes = BytesIO()
-                fig.canvas.print_figure(bytes)
-                request.svg(bytes.getvalue().decode('utf-8'))
-    finally:
-        del tracking_managers[:]
-        if hasattr(matplotlib, 'pyplot'):
-            matplotlib.pyplot.close('all')
+    from io import BytesIO
+    for manager in tracking_managers:
+        fig = manager.canvas.figure
+        if fig.axes or fig.lines:
+            bytes = BytesIO()
+            fig.canvas.print_figure(bytes)
+            request.svg(bytes.getvalue().decode('utf-8'))
 
 
 @_Backend.export

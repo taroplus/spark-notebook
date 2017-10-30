@@ -1342,7 +1342,7 @@ div.output_svg > div {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
   font-size: 12px;
   background: #272822;
-  line-height: 16px;
+  line-height: 18px;
 }
 .CodeMirror div.CodeMirror-selected {
   background: #49483E;
