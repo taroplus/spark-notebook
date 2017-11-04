@@ -5,6 +5,7 @@ import org.apache.spark.api.java.JavaSparkContext
 import org.apache.spark.repl.Main
 import org.apache.spark.sql.SparkSession
 import org.slf4j.LoggerFactory
+import play.api.Configuration
 import play.api.libs.json.{JsObject, Json}
 import py4j.GatewayServer
 
@@ -40,25 +41,21 @@ class PythonKernel extends Kernel {
   }
 
   override def execute(stream: StreamAppender, msg: JsObject, counter: Int): JsObject = {
-    // make sure background python is running
-    ensureProcess()
-
-    val code = (msg \ "content" \ "code").as[String]
-    // create a request for execution and enqueue
-    pendingRequest = new PythonExecuteRequest(code, stream)
-    // wait for results
-    while(!pendingRequest.waitForCompletion(1000) && process.isAlive) {
-      //
-    }
-    pendingRequest = null
-
+    execute(new PythonExecuteRequest((msg \ "content" \ "code").as[String], stream))
     Json.obj("execution_count" -> counter, "status" -> "ok")
   }
 
-  override def start(): Unit = {
+  override def start(conf: Configuration): Unit = {
     gatewayServer = new GatewayServer(this, 0)
     gatewayServer.start()
     logger.info("Starting py4j gateway server at {}", gatewayServer.getListeningPort)
+    // init script
+    conf.getString("kernel.python.initScript") match {
+      case Some(script) if script.length > 0 =>
+        logger.info("Running init script")
+        execute(new PythonExecuteRequest(script, null))
+      case _ =>
+    }
   }
 
   override def stop(): Unit = {
@@ -69,6 +66,18 @@ class PythonKernel extends Kernel {
     if (pendingRequest != null) {
       pendingRequest.complete()
     }
+  }
+
+  private def execute(request: PythonExecuteRequest): Unit = {
+    // make sure background python is running
+    ensureProcess()
+    // create a request for execution and enqueue
+    pendingRequest = request
+    // wait for a process to find the request and run it
+    while(!request.waitForCompletion(1000) && process.isAlive) {
+      //
+    }
+    pendingRequest = null
   }
 
   private def ensureProcess(): Unit = {

@@ -10,6 +10,7 @@ import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.Materializer
 import com.typesafe.config.ConfigRenderOptions
 import org.apache.commons.io.FileUtils
+import play.Environment
 import play.api.Configuration
 import play.api.libs.json._
 import play.api.libs.streams.ActorFlow
@@ -26,13 +27,21 @@ import scala.util.Try
 @Singleton
 class Application @Inject()(
     conf: Configuration,
+    env: Environment,
     kernel: KernelAccess)(implicit actorSystem: ActorSystem,
     mat: Materializer,
     ec: ExecutionContext) extends Controller {
 
+  // resource folder
+  private final val resourcePath = new File(env.rootPath(), "resources")
+
   private final val baseUrl = "/"
+
   // default notebook home = notebook folder
-  private final val notebookHome = new File(conf.getString("notebook.home").getOrElse("notebooks"))
+  private final val notebookHome = conf.getString("notebook.home")
+      .map(new File(_))
+      .getOrElse(new File(env.rootPath(), "notebooks"))
+
   // max notebook size
   private final val maxLength = 10 * 1024 * 1024 // 10M
 
@@ -80,7 +89,7 @@ class Application @Inject()(
 
   // serve files under custom
   def custom(file: String) = Action { request =>
-    val fileToServe = new File("./resources", file)
+    val fileToServe = new File(resourcePath, file)
     if (fileToServe.exists) {
       Ok.sendFile(fileToServe, inline = true)
     } else {

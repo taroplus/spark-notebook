@@ -1,5 +1,6 @@
 package taroplus.kernel
 
+import play.api.Configuration
 import play.api.libs.json.JsObject
 
 /**
@@ -10,7 +11,7 @@ trait Kernel {
   val info: JsObject
 
   // prepare for execution
-  def start(): Unit = {}
+  def start(conf: Configuration): Unit
 
   // execute given code
   def execute(stream: StreamAppender, msg: JsObject, counter: Int): JsObject

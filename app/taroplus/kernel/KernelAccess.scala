@@ -4,16 +4,17 @@ import java.util.UUID
 import javax.inject.{Inject, Singleton}
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
+import play.api.Configuration
 import play.api.inject.ApplicationLifecycle
 import play.api.libs.json.{JsObject, JsString, JsValue, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class KernelAccess @Inject()(lifecycle: ApplicationLifecycle)(
+class KernelAccess @Inject()(lifecycle: ApplicationLifecycle, conf: Configuration)(
     implicit actorSystem: ActorSystem, ec: ExecutionContext){
 
-  private val kernelActor = actorSystem.actorOf(Props(classOf[KernelActor]))
+  private val kernelActor = actorSystem.actorOf(Props(new KernelActor(conf)))
 
   // kill the actor before this getting shut down
   lifecycle.addStopHook(() => Future{

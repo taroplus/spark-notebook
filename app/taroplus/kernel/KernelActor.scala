@@ -4,13 +4,14 @@ import java.util.concurrent.ConcurrentLinkedQueue
 
 import akka.actor.{Actor, ActorRef, Props}
 import org.slf4j.LoggerFactory
+import play.api.Configuration
 import play.api.libs.json.{JsObject, JsValue, Json}
 import taroplus.spark.SparkSystem
 
 /**
   * Interpreter representation - Akka Actor
   */
-class KernelActor extends Actor {
+class KernelActor(conf: Configuration) extends Actor {
   private val logger = LoggerFactory.getLogger(this.getClass)
   private lazy val executor = context.actorOf(Props(new SingleExecutor))
 
@@ -34,8 +35,8 @@ class KernelActor extends Actor {
   override def preStart(): Unit = {
     logger.info("Starting KernelActor")
     SparkSystem.start()
-    scala.start()
-    python.start()
+    scala.start(conf)
+    python.start(conf)
   }
 
   override def receive: Receive = {
@@ -49,8 +50,8 @@ class KernelActor extends Actor {
           python.stop()
           SparkSystem.stop()
           SparkSystem.start()
-          scala.start()
-          python.start()
+          scala.start(conf)
+          python.start(conf)
 
         case "interrupt" =>
           logger.info("Cancel All jobs and tasks")

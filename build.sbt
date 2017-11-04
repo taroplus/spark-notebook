@@ -4,7 +4,7 @@ name := "sparkling-notebook"
 
 lazy val commonSettings = Seq(
   organization := "taroplus",
-  version := "0.1",
+  version := "0.2",
   scalaVersion := "2.11.8"
 )
 
@@ -21,3 +21,4 @@ lazy val server = (project in file(".")).enablePlugins(PlayScala)
 
 unmanagedClasspath in Runtime += file("/Users/konishio/workspace/spark-tools/target/classes")
 mappings in Universal ++= directory(baseDirectory.value / "resources")
+mappings in Universal ++= directory(baseDirectory.value / "notebooks")
