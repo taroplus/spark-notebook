@@ -45,7 +45,7 @@ class ScalaKernel extends Kernel {
 
   override def start(conf: Configuration): Unit = {
     // init script
-    conf.getString("kernel.scala.initScript") match {
+    conf.getOptional[String]("kernel.scala.initScript") match {
       case Some(script) if script.length > 0 =>
         logger.info("Running init script")
         SparkSystem.iloop.intp.beQuietDuring {

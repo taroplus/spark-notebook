@@ -8,13 +8,14 @@ import javax.inject.{Inject, Singleton}
 
 import akka.actor.{Actor, ActorSystem, Props}
 import akka.stream.Materializer
-import com.typesafe.config.ConfigRenderOptions
+import com.typesafe.config.{ConfigObject, ConfigRenderOptions}
 import org.apache.commons.io.FileUtils
 import play.Environment
 import play.api.Configuration
+import play.api.http.FileMimeTypes
 import play.api.libs.json._
 import play.api.libs.streams.ActorFlow
-import play.api.mvc.{Action, Controller, WebSocket}
+import play.api.mvc.{InjectedController, WebSocket}
 import taroplus.contents.Contents
 import taroplus.kernel.KernelAccess
 
@@ -30,7 +31,8 @@ class Application @Inject()(
     env: Environment,
     kernel: KernelAccess)(implicit actorSystem: ActorSystem,
     mat: Materializer,
-    ec: ExecutionContext) extends Controller {
+    mimeTypes: FileMimeTypes,
+    ec: ExecutionContext) extends InjectedController {
 
   // resource folder
   private final val resourcePath = new File(env.rootPath(), "resources")
@@ -38,7 +40,7 @@ class Application @Inject()(
   private final val baseUrl = "/"
 
   // default notebook home = notebook folder
-  private final val notebookHome = conf.getString("notebook.home")
+  private final val notebookHome = conf.getOptional[String]("notebook.home")
       .map(new File(_))
       .getOrElse(new File(env.rootPath(), "notebooks"))
 
@@ -79,7 +81,7 @@ class Application @Inject()(
 
   // serve /api/config
   def config(app: String) = Action {
-    val configValue = conf.getObject(s"config.$app")
+    val configValue = conf.getOptional[ConfigObject](s"config.$app")
     Ok(configValue match {
       case Some(cfg) => Json.parse(
         cfg.render(ConfigRenderOptions.concise().setJson(true)))

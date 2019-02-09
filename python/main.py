@@ -4,7 +4,7 @@ import ast
 
 from time import sleep
 from py4j.java_gateway import java_import, JavaGateway, GatewayClient
-from py4j.protocol import Py4JError
+from py4j.protocol import Py4JJavaError, Py4JError
 
 from pyspark import SparkConf
 from pyspark.context import SparkContext
@@ -112,6 +112,9 @@ while True:
                     pprint(val)
 
             if mpl: flush_figures(request)
+    except Py4JJavaError:
+        # errors should not be truncated
+        output.write(traceback.format_exc())
     except Py4JError:
         # this means remote java process is dead, just quit
         break

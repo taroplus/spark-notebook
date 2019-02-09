@@ -18,6 +18,8 @@ import scala.tools.nsc.interpreter.JPrintWriter
   */
 object SparkSystem {
   private val logger = LoggerFactory.getLogger(this.getClass)
+  // disable ansi color
+  sys.props.put("scala.color", "false")
 
   var iloop: SparkILoop = _
   var backupClassLoader: ClassLoader = _
@@ -43,8 +45,6 @@ object SparkSystem {
     // this interactive reader is not used, but this is required
     // to handle processLine method
     iloop.in = iloop.chooseReader(iloop.settings)
-
-    iloop.intp.setContextClassLoader()
     iloop.initializeSpark()
   }
 

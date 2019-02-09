@@ -50,7 +50,7 @@ class PythonKernel extends Kernel {
     gatewayServer.start()
     logger.info("Starting py4j gateway server at {}", gatewayServer.getListeningPort)
     // init script
-    conf.getString("kernel.python.initScript") match {
+    conf.getOptional[String]("kernel.python.initScript") match {
       case Some(script) if script.length > 0 =>
         logger.info("Running init script")
         execute(new PythonExecuteRequest(script, null))
@@ -77,6 +77,9 @@ class PythonKernel extends Kernel {
     while(!request.waitForCompletion(1000) && process.isAlive) {
       //
     }
+    if (!process.isAlive) {
+      logger.warn("Missing python process: {}", process)
+    }
     pendingRequest = null
   }
 
@@ -84,13 +87,14 @@ class PythonKernel extends Kernel {
     if (process == null || !process.isAlive) {
       val builder = new ProcessBuilder(
         sys.env.getOrElse("PYSPARK_PYTHON", "python"),
-        "./python/main.py",
+        // user.dir is the application root
+        sys.props("user.dir") + "/python/main.py",
         gatewayServer.getListeningPort.toString)
 
       val spark_home = Main.conf
         .getOption("spark.home")
-        .orElse(Option(System.getenv("PYSPARK_HOME")))
         .orElse(Option(System.getenv("SPARK_HOME")))
+        .orElse(Option(System.getenv("PYSPARK_HOME")))
         .getOrElse(".")
       logger.info("Launching python process with spark_home = {}", spark_home)
 
@@ -100,9 +104,10 @@ class PythonKernel extends Kernel {
         logger.error("pyspark lib directory does not exist: {}", lib)
       }
 
-      val python_libs = lib.listFiles()
+      val python_libs = Option(lib.listFiles())
+        .toSeq.flatten
         .filter(s => s.getName.endsWith(".zip"))
-        .map(_.getAbsolutePath)
+        .map(_.getAbsolutePath) :+ lib.getParentFile.getAbsolutePath
 
       val env = builder.environment()
       env.put("PYTHONPATH", (sys.env.get("PYTHONPATH").toSeq ++ python_libs).mkString(File.pathSeparator))

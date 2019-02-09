@@ -8,6 +8,9 @@ import play.api.Configuration
 import play.api.libs.json.{JsObject, JsValue, Json}
 import taroplus.spark.SparkSystem
 
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
+
 /**
   * Interpreter representation - Akka Actor
   */
@@ -79,6 +82,18 @@ class KernelActor(conf: Configuration) extends Actor {
 
   class SingleExecutor extends Actor {
     var isRunning: Boolean = _
+    var ref: ActorRef = _
+    var msg: JsObject = _
+
+    override def preStart(): Unit = {
+      implicit val executor: ExecutionContext = context.dispatcher
+      // this timer is to prevent timeout while running
+      context.system.scheduler.schedule(
+        Duration.Zero,
+        Duration(10, SECONDS),
+        () => if (isRunning) sendPingMessage())
+    }
+
     def receive: Receive = {
       case POLL if !isRunning =>
         synchronized {
@@ -86,7 +101,10 @@ class KernelActor(conf: Configuration) extends Actor {
             isRunning = true
 
             // grab a task to run
-            val (ref, msg) = tasks.poll()
+            val task = tasks.poll()
+            ref = task._1
+            msg = task._2
+
             // status busy
             ref ! reply_message(msg, "status", "iopub", Json.obj("execution_state" -> "busy"))
 
@@ -108,6 +126,10 @@ class KernelActor(conf: Configuration) extends Actor {
           }
         }
       case _ => ()
+    }
+
+    private def sendPingMessage(): Unit = {
+      ref ! Json.obj("channel" -> "iopub", "msg_type" -> "ping")
     }
   }
 
