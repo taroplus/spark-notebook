@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorRef, Props}
 import org.slf4j.LoggerFactory
 import play.api.Configuration
 import play.api.libs.json.{JsObject, JsValue, Json}
-import taroplus.spark.SparkSystem
+import taroplus.spark.{EventListener, SparkSystem}
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -37,7 +37,7 @@ class KernelActor(conf: Configuration) extends Actor {
 
   override def preStart(): Unit = {
     logger.info("Starting KernelActor")
-    SparkSystem.start()
+    SparkSystem.start(context.system)
     scala.start(conf)
     python.start(conf)
   }
@@ -52,7 +52,7 @@ class KernelActor(conf: Configuration) extends Actor {
           scala.stop()
           python.stop()
           SparkSystem.stop()
-          SparkSystem.start()
+          SparkSystem.start(context.system)
           scala.start(conf)
           python.start(conf)
 
@@ -91,7 +91,12 @@ class KernelActor(conf: Configuration) extends Actor {
       context.system.scheduler.schedule(
         Duration.Zero,
         Duration(10, SECONDS),
-        () => if (isRunning) sendPingMessage())
+        () => {
+          if (isRunning && ref != null && msg != null)
+            ref ! Json.obj("channel" -> "iopub",
+              "msg_type" -> "ping",
+              "header" -> Json.obj("msg_type" -> "ping"))
+        })
     }
 
     def receive: Receive = {
@@ -104,6 +109,7 @@ class KernelActor(conf: Configuration) extends Actor {
             val task = tasks.poll()
             ref = task._1
             msg = task._2
+            EventListener.current(ref, msg)
 
             // status busy
             ref ! reply_message(msg, "status", "iopub", Json.obj("execution_state" -> "busy"))
@@ -112,6 +118,9 @@ class KernelActor(conf: Configuration) extends Actor {
             // run the code
             val reply_content = getKernel(msg).execute(appender, msg, counter)
             appender.flush()
+
+            // reset spark progress bar
+            EventListener.reset()
 
             // execute reply
             ref ! reply_message(msg, "execute_reply", "shell", reply_content)
@@ -126,10 +135,6 @@ class KernelActor(conf: Configuration) extends Actor {
           }
         }
       case _ => ()
-    }
-
-    private def sendPingMessage(): Unit = {
-      ref ! Json.obj("channel" -> "iopub", "msg_type" -> "ping")
     }
   }
 

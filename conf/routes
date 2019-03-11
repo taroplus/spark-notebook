@@ -34,3 +34,4 @@ POST    /api/sessions               controllers.Application.newSession
 # handle custom files by the application
 GET     /assets/custom/*file        controllers.Application.custom(file: String)
 GET     /assets/*file               controllers.Assets.at(path="/public", file)
+GET     /nbextensions/widgets/notebook/js/*file               controllers.Assets.at(path="/public", file)

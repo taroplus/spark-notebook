@@ -3,6 +3,7 @@ package taroplus.spark
 import java.io.File
 import java.net.URLClassLoader
 
+import akka.actor.ActorSystem
 import org.apache.spark.SparkConf
 import org.apache.spark.deploy.SparkSubmit
 import org.apache.spark.repl.{Main, SparkILoop}
@@ -51,7 +52,7 @@ object SparkSystem {
   /**
     * Setting up IMain and make Spark variables available
     */
-  def start(): Unit = {
+  def start(system: ActorSystem): Unit = {
     logger.info("Starting SparkSystem")
     iloop = new ProcessLineFixed()
     // back up current class loader
@@ -63,6 +64,7 @@ object SparkSystem {
       case _ =>
         logger.error("Unable to locate the dummy file: submit-target.jar")
     }
+    Main.sparkContext.addSparkListener(EventListener.instance(system))
   }
 
   /**

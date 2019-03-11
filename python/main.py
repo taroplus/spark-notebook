@@ -4,11 +4,15 @@ import ast
 
 from time import sleep
 from py4j.java_gateway import java_import, JavaGateway, GatewayClient
-from py4j.protocol import Py4JJavaError, Py4JError
+from py4j.protocol import Py4JNetworkError
 
 from pyspark import SparkConf
 from pyspark.context import SparkContext
 from pyspark.sql import SparkSession, SQLContext
+
+import logging
+logging.basicConfig(filename='logs/python.log',level=logging.INFO)
+logging.info('Starting python module for sparkle notebook')
 
 # Connect to the gateway
 gateway = JavaGateway(GatewayClient(port=int(sys.argv[1])), auto_convert=True)
@@ -112,12 +116,10 @@ while True:
                     pprint(val)
 
             if mpl: flush_figures(request)
-    except Py4JJavaError:
-        # errors should not be truncated
-        output.write(traceback.format_exc())
-    except Py4JError:
-        # this means remote java process is dead, just quit
-        break
+    except Py4JNetworkError:
+        # since it's using local connection, network error
+        # means java process is already dead
+        break;
     except:
         # errors should not be truncated
         output.write(traceback.format_exc())
